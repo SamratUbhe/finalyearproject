@@ -1,0 +1,30 @@
+.env
+.env.local
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.venv/
+env/
+venv/
+
+
+# Git backups
+.git_backup/
+.git_corrupt_backup/
+
+# Secrets
+.env
+
+# Python temporary files
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Dependencies
+node_modules/

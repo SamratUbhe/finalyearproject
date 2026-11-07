@@ -1,0 +1,118 @@
+{
+  "review_id": "rev-5dfbad8a1f36",
+  "repo_id": "test-repo-pipeline",
+  "created_at": "2026-11-06T11:29:30.598530+00:00",
+  "status": "completed",
+  "total_files_reviewed": 2,
+  "total_chunks_reviewed": 2,
+  "findings": [
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "OWASP A03:2021-Injection",
+        "cwe_id": "CWE-89",
+        "owasp_category": null,
+        "title": "SQL Injection in User Query",
+        "description": "Raw SQL query string concatenation without parameterization.",
+        "severity": "CRITICAL",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "src/database.py",
+          "start_line": 10,
+          "end_line": 15,
+          "code_snippet": "db.execute(f'SELECT * FROM users WHERE id = {user_id}')"
+        },
+        "remediation": {
+          "explanation": "Use query parameter substitution",
+          "recommended_fix": "db.execute('SELECT * FROM users WHERE id = %s', (user_id,))",
+          "references": []
+        },
+        "raw_risk_score": 10.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 10.0,
+      "priority_rank": 1,
+      "is_deduplicated": true,
+      "sources": [
+        "SECURITY_AUDITOR",
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": "Security Auditor recommendation takes precedence over Software Architect simplification/refactoring."
+    },
+    {
+      "finding": {
+        "id": "ARCH-002",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Complexity Defect",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "High Cyclomatic Complexity in Service Layer",
+        "description": "Raw SQL query string concatenation without parameterization.",
+        "severity": "LOW",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "src/service.py",
+          "start_line": 20,
+          "end_line": 35,
+          "code_snippet": "db.execute(f'SELECT * FROM users WHERE id = {user_id}')"
+        },
+        "remediation": {
+          "explanation": "Use query parameter substitution",
+          "recommended_fix": "db.execute('SELECT * FROM users WHERE id = %s', (user_id,))",
+          "references": []
+        },
+        "raw_risk_score": 3.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 3.0,
+      "priority_rank": 2,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    }
+  ],
+  "severity_distribution": {
+    "CRITICAL": 1,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 1,
+    "INFO": 0
+  },
+  "risk_summary": {
+    "total_findings": 2,
+    "average_risk_score": 6.5,
+    "max_risk_score": 10.0,
+    "critical_count": 1,
+    "high_count": 0,
+    "deduplicated_count": 1
+  },
+  "agent_metrics": {
+    "total_agent_calls": 3,
+    "successful_agent_calls": 3,
+    "failed_agent_calls": 0,
+    "total_execution_time_ms": 250.0,
+    "total_tokens_used": 370,
+    "by_role": {
+      "SECURITY_AUDITOR": {
+        "calls": 1,
+        "success": 1,
+        "failed": 0,
+        "execution_time_ms": 85.0,
+        "findings_count": 1,
+        "tokens_used": 120
+      },
+      "SOFTWARE_ARCHITECT": {
+        "calls": 2,
+        "success": 2,
+        "failed": 0,
+        "execution_time_ms": 165.0,
+        "findings_count": 2,
+        "tokens_used": 250
+      }
+    }
+  },
+  "advisory_disclaimer": "This review report contains purely advisory recommendations for developer evaluation. No source code modifications have been applied automatically."
+}

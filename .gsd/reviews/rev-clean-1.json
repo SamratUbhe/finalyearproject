@@ -1,0 +1,51 @@
+{
+  "review_id": "rev-clean-1",
+  "repo_id": "repo-clean",
+  "created_at": "2026-11-06T12:00:00Z",
+  "status": "completed",
+  "total_files_reviewed": 1,
+  "total_chunks_reviewed": 1,
+  "findings": [
+    {
+      "finding": {
+        "id": "ARCH-002",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Maintainability",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "High Cyclomatic Complexity",
+        "description": "Function contains excessive branching nesting exceeding thresholds.",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "evidence": {
+          "file_path": "src/services/billing.py",
+          "start_line": 45,
+          "end_line": 50,
+          "code_snippet": "if a:\n    if b:\n        return c"
+        },
+        "remediation": {
+          "explanation": "Decompose nested branches into guard clauses.",
+          "recommended_fix": "if not a or not b:\n    return None\nreturn c",
+          "references": []
+        },
+        "raw_risk_score": 5.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 5.0,
+      "priority_rank": 2,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    }
+  ],
+  "severity_distribution": {
+    "MEDIUM": 1
+  },
+  "risk_summary": {
+    "critical_count": 0
+  },
+  "agent_metrics": {},
+  "advisory_disclaimer": "This review report contains purely advisory recommendations for developer evaluation. No source code modifications have been applied automatically."
+}

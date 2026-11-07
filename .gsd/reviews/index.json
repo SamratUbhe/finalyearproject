@@ -1,0 +1,219 @@
+[
+  {
+    "review_id": "rev-5dfbad8a1f36",
+    "repo_id": "test-repo-pipeline",
+    "created_at": "2026-11-06T11:29:30.598530+00:00",
+    "status": "completed",
+    "total_files": 2,
+    "total_chunks": 2,
+    "total_findings": 2,
+    "severity_distribution": {
+      "CRITICAL": 1,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 1,
+      "INFO": 0
+    },
+    "max_risk_score": 10.0
+  },
+  {
+    "review_id": "rev-cli-test-1",
+    "repo_id": "repo-cli-123",
+    "created_at": "2026-11-06T12:00:00Z",
+    "status": "completed",
+    "total_files": 2,
+    "total_chunks": 5,
+    "total_findings": 2,
+    "severity_distribution": {
+      "CRITICAL": 1,
+      "HIGH": 0,
+      "MEDIUM": 1,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "max_risk_score": 10.0
+  },
+  {
+    "review_id": "rev-clean-1",
+    "repo_id": "repo-clean",
+    "created_at": "2026-11-06T12:00:00Z",
+    "status": "completed",
+    "total_files": 1,
+    "total_chunks": 1,
+    "total_findings": 1,
+    "severity_distribution": {
+      "MEDIUM": 1
+    },
+    "max_risk_score": 5.0
+  },
+  {
+    "review_id": "rev-e912e9b5edfd",
+    "repo_id": "test-repo-pipeline",
+    "created_at": "2026-11-06T17:32:31.648178+00:00",
+    "status": "completed",
+    "total_files": 2,
+    "total_chunks": 2,
+    "total_findings": 2,
+    "severity_distribution": {
+      "CRITICAL": 1,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 1,
+      "INFO": 0
+    },
+    "max_risk_score": 10.0
+  },
+  {
+    "review_id": "rev-emp-test-99",
+    "repo_id": "production-api",
+    "created_at": "2026-11-06T15:30:00Z",
+    "status": "completed",
+    "total_files": 12,
+    "total_chunks": 24,
+    "total_findings": 1,
+    "severity_distribution": {
+      "CRITICAL": 1,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "max_risk_score": 9.8
+  },
+  {
+    "review_id": "rev-json-test",
+    "repo_id": "test-crypto",
+    "created_at": "2026-11-06T16:00:00Z",
+    "status": "completed",
+    "total_files": 3,
+    "total_chunks": 5,
+    "total_findings": 1,
+    "severity_distribution": {
+      "CRITICAL": 0,
+      "HIGH": 1,
+      "MEDIUM": 0,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "max_risk_score": 8.0
+  },
+  {
+    "review_id": "rev-3ec5829ddedc",
+    "repo_id": "test-repo-pipeline",
+    "created_at": "2026-11-06T17:56:07.236376+00:00",
+    "status": "completed",
+    "total_files": 2,
+    "total_chunks": 2,
+    "total_findings": 2,
+    "severity_distribution": {
+      "CRITICAL": 1,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 1,
+      "INFO": 0
+    },
+    "max_risk_score": 10.0
+  },
+  {
+    "review_id": "rev-443fa342ffa2",
+    "repo_id": "539d2e1cfbbd",
+    "created_at": "2026-11-06T18:14:40.585881+00:00",
+    "status": "completed",
+    "total_files": 132,
+    "total_chunks": 206,
+    "total_findings": 0,
+    "severity_distribution": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "max_risk_score": 0.0
+  },
+  {
+    "review_id": "rev-751c0e198ca8",
+    "repo_id": "881a9379ab7c",
+    "created_at": "2026-11-06T18:16:23.218933+00:00",
+    "status": "completed",
+    "total_files": 4,
+    "total_chunks": 4,
+    "total_findings": 0,
+    "severity_distribution": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "max_risk_score": 0.0
+  },
+  {
+    "review_id": "rev-67297a184e78",
+    "repo_id": "539d2e1cfbbd",
+    "created_at": "2026-11-06T18:27:33.811253+00:00",
+    "status": "completed",
+    "total_files": 132,
+    "total_chunks": 206,
+    "total_findings": 0,
+    "severity_distribution": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "max_risk_score": 0.0
+  },
+  {
+    "review_id": "rev-5aa319a5e181",
+    "repo_id": "6ecac818aa5c",
+    "created_at": "2026-11-06T18:31:13.580765+00:00",
+    "status": "completed",
+    "total_files": 631,
+    "total_chunks": 1375,
+    "total_findings": 0,
+    "severity_distribution": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "max_risk_score": 0.0
+  },
+  {
+    "review_id": "rev-c86c2d121394",
+    "repo_id": "7945cffb502b",
+    "created_at": "2026-11-06T19:17:00.990303+00:00",
+    "status": "completed",
+    "total_files": 2,
+    "total_chunks": 4,
+    "total_findings": 8,
+    "severity_distribution": {
+      "CRITICAL": 2,
+      "HIGH": 4,
+      "MEDIUM": 2,
+      "LOW": 0,
+      "INFO": 0
+    },
+    "max_risk_score": 10.0
+  },
+  {
+    "review_id": "rev-1f00a1cde244",
+    "repo_id": "34416158264e",
+    "created_at": "2026-11-06T19:24:10.425553+00:00",
+    "status": "completed",
+    "total_files": 27,
+    "total_chunks": 16,
+    "total_findings": 7,
+    "severity_distribution": {
+      "CRITICAL": 1,
+      "HIGH": 1,
+      "MEDIUM": 2,
+      "LOW": 3,
+      "INFO": 0
+    },
+    "max_risk_score": 10.0
+  }
+]

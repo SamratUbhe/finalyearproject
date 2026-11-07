@@ -1,0 +1,50 @@
+{
+  "review_id": "rev-443fa342ffa2",
+  "repo_id": "539d2e1cfbbd",
+  "created_at": "2026-11-06T18:14:40.585881+00:00",
+  "status": "completed",
+  "total_files_reviewed": 132,
+  "total_chunks_reviewed": 206,
+  "findings": [],
+  "severity_distribution": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 0,
+    "INFO": 0
+  },
+  "risk_summary": {
+    "total_findings": 0,
+    "average_risk_score": 0.0,
+    "max_risk_score": 0.0,
+    "critical_count": 0,
+    "high_count": 0,
+    "deduplicated_count": 0
+  },
+  "agent_metrics": {
+    "total_agent_calls": 412,
+    "successful_agent_calls": 0,
+    "failed_agent_calls": 412,
+    "total_execution_time_ms": 18.81,
+    "total_tokens_used": 0,
+    "by_role": {
+      "SECURITY_AUDITOR": {
+        "calls": 206,
+        "success": 0,
+        "failed": 206,
+        "execution_time_ms": 10.859700210858136,
+        "findings_count": 0,
+        "tokens_used": 0
+      },
+      "SOFTWARE_ARCHITECT": {
+        "calls": 206,
+        "success": 0,
+        "failed": 206,
+        "execution_time_ms": 7.955199689604342,
+        "findings_count": 0,
+        "tokens_used": 0
+      }
+    }
+  },
+  "advisory_disclaimer": "This review report contains purely advisory recommendations for developer evaluation. No source code modifications have been applied automatically."
+}

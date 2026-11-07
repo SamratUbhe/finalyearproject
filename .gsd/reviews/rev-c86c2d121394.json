@@ -1,0 +1,342 @@
+{
+  "review_id": "rev-c86c2d121394",
+  "repo_id": "7945cffb502b",
+  "created_at": "2026-11-06T19:17:00.990303+00:00",
+  "status": "completed",
+  "total_files_reviewed": 2,
+  "total_chunks_reviewed": 4,
+  "findings": [
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "OWASP A03:2021-Injection",
+        "cwe_id": "CWE-89",
+        "owasp_category": "A03:2021-Injection",
+        "title": "SQL Injection in login_user",
+        "description": "User input variables 'username' and 'password' are directly interpolated into the SQL query string without parameterization. This allows an attacker to manipulate the query structure, potentially bypassing authentication or extracting sensitive database contents.",
+        "severity": "CRITICAL",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 8,
+          "end_line": 14,
+          "code_snippet": "def login_user(username, password):\n    conn = sqlite3.connect(\"users.db\")\n    cursor = conn.cursor()\n\n    # DEMO VULNERABILITY: Raw SQL Injection (CWE-89)\n    query = f\"SELECT * FROM accounts WHERE username = '{username}' AND password = '{password}'\"\n    cursor.execute(query)"
+        },
+        "remediation": {
+          "explanation": "Use parameterized queries to ensure that user input is treated strictly as data rather than executable SQL code.",
+          "recommended_fix": "query = \"SELECT * FROM accounts WHERE username = ? AND password = ?\"\ncursor.execute(query, (username, password))",
+          "references": [
+            "https://cwe.mitre.org/data/definitions/89.html",
+            "https://owasp.org/Top10/A03_2021-Injection/"
+          ]
+        },
+        "raw_risk_score": 10.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 10.0,
+      "priority_rank": 1,
+      "is_deduplicated": true,
+      "sources": [
+        "SECURITY_AUDITOR",
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": "Security Auditor recommendation takes precedence over Software Architect simplification/refactoring."
+    },
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "OWASP A03:2021-Injection",
+        "cwe_id": "CWE-78",
+        "owasp_category": "A03:2021-Injection",
+        "title": "OS Command Injection via os.system",
+        "description": "The function execute_server_diag directly concatenates the user-supplied parameter 'target_host' into a system command executed via os.system. An attacker can manipulate 'target_host' to inject arbitrary OS commands, potentially leading to remote code execution on the underlying server.",
+        "severity": "CRITICAL",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 22,
+          "end_line": 24,
+          "code_snippet": "def execute_server_diag(target_host):\n    # DEMO VULNERABILITY: Command Injection (CWE-78)\n    os.system(\"ping -c 2 \" + target_host)"
+        },
+        "remediation": {
+          "explanation": "Avoid using os.system with concatenated user input. Use the 'subprocess' module with a list of arguments and shell=False, or strictly validate and sanitize the input against a safe allowlist of characters/hosts.",
+          "recommended_fix": "import subprocess\n\ndef execute_server_diag(target_host):\n    # Use subprocess with a list and shell=False to prevent command injection\n    subprocess.run([\"ping\", \"-c\", \"2\", target_host], check=True)",
+          "references": [
+            "https://cwe.mitre.org/data/definitions/78.html",
+            "https://owasp.org/Top10/A03_2021-Injection/"
+          ]
+        },
+        "raw_risk_score": 10.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 10.0,
+      "priority_rank": 2,
+      "is_deduplicated": true,
+      "sources": [
+        "SECURITY_AUDITOR",
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": "Security Auditor recommendation takes precedence over Software Architect simplification/refactoring."
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Code Quality / Complexity",
+        "cwe_id": "CWE-697",
+        "owasp_category": null,
+        "title": "High Cyclomatic Complexity and Deeply Nested Conditionals (Arrow Anti-Pattern)",
+        "description": "The function handle_admin_action contains excessive levels of nested conditional statements (\"arrow anti-pattern\"). This significantly increases cognitive complexity, reduces testability, and makes the codebase prone to maintenance errors.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\admin.py",
+          "start_line": 3,
+          "end_line": 29,
+          "code_snippet": "def handle_admin_action(action, user_role, payload, db_session, email_service, audit_log):\n    # Nested conditionals violating single-responsibility principle\n    if user_role == \"admin\":\n        if action == \"delete_user\":\n            if \"target_id\" in payload:\n                if payload[\"target_id\"] > 0:\n                    db_session.execute(\"DELETE FROM users WHERE id = ?\", (payload[\"target_id\"],))\n                    email_service.send_alert(\"User deleted\")\n                    audit_log.record(\"delete\", payload[\"target_id\"])\n                    return True"
+        },
+        "remediation": {
+          "explanation": "Flushing out guard clauses and delegating specific actions to dedicated handler functions or strategy patterns will drastically reduce cyclomatic complexity and adhere to the Single Responsibility Principle.",
+          "recommended_fix": "Use early returns (guard clauses) to validate prerequisites and extract each action into a separate strategy function or method.",
+          "references": [
+            "Clean Code by Robert C. Martin - Chapter 3: Functions",
+            "Refactoring: Improving the Design of Existing Code by Martin Fowler - Replace Conditional with Polymorphism"
+          ]
+        },
+        "raw_risk_score": 8.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 8.0,
+      "priority_rank": 3,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-002",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Coupling & Modularity",
+        "cwe_id": "CWE-1060",
+        "owasp_category": null,
+        "title": "Single Responsibility Principle (SRP) Violation via God Function",
+        "description": "The handle_admin_action function handles multiple orthogonal administrative domains including user deletion, role updates, data exports, and moderator queries, coupling distinct operational behaviors into a single monolithic block.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\admin.py",
+          "start_line": 3,
+          "end_line": 30,
+          "code_snippet": "def handle_admin_action(action, user_role, payload, db_session, email_service, audit_log):\n    # Nested conditionals violating single-responsibility principle\n    if user_role == \"admin\":\n        if action == \"delete_user\":\n... \n        elif action == \"update_role\":\n... \n        elif action == \"export_data\":\n... \n    elif user_role == \"moderator\":\n        if action == \"view_user\":\n            return db_session.execute(\"SELECT * FROM users WHERE id = ?\", (payload.get(\"target_id\"),))\n    return False"
+        },
+        "remediation": {
+          "explanation": "Decompose the monolithic function into a dispatcher or command pattern mapping administrative actions to dedicated service classes.",
+          "recommended_fix": "Implement a Command Pattern or Dispatcher Registry where each action is encapsulated within its own discrete class or module.",
+          "references": [
+            "Single Responsibility Principle (SOLID)",
+            "Command Pattern (Design Patterns: Elements of Reusable Object-Oriented Software)"
+          ]
+        },
+        "raw_risk_score": 8.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 8.0,
+      "priority_rank": 4,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Resource Management",
+        "cwe_id": "CWE-404",
+        "owasp_category": "A04:2021 - Insecure Design",
+        "title": "Unclosed Database Connection Resource Leak",
+        "description": "The sqlite3 connection is explicitly opened using sqlite3.connect() but is never closed explicitly or managed via a context manager (e.g., 'with' statement). Under heavy load, unclosed connections can lead to resource exhaustion, file descriptor leaks, and database locking issues.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 9,
+          "end_line": 10,
+          "code_snippet": "conn = sqlite3.connect(\"users.db\")\n    cursor = conn.cursor()"
+        },
+        "remediation": {
+          "explanation": "Using Python's context manager for database connections ensures that resources are automatically cleaned up and released back to the system even if exceptions occur during execution.",
+          "recommended_fix": "with sqlite3.connect(\"users.db\") as conn:\n        cursor = conn.cursor()\n        # execute query...",
+          "references": [
+            "Python Standard Library: sqlite3 context manager support",
+            "Clean Code: Resource Management Guidelines"
+          ]
+        },
+        "raw_risk_score": 8.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 8.0,
+      "priority_rank": 5,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "Secret and Credential Leakage",
+        "cwe_id": "CWE-798",
+        "owasp_category": "A07:2021-Identification and Authentication Failures",
+        "title": "Hardcoded JWT Secret Key",
+        "description": "The application uses a hardcoded secret key ('super_insecure_hardcoded_jwt_secret_9988') for JSON Web Token (JWT) signing and verification. Hardcoded secrets can be easily extracted by attackers from the source code or binary, allowing them to forge valid authentication tokens and gain unauthorized access to user accounts or administrative privileges.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 6,
+          "end_line": 6,
+          "code_snippet": "JWT_SECRET_KEY = \"super_insecure_hardcoded_jwt_secret_9988\""
+        },
+        "remediation": {
+          "explanation": "Store sensitive cryptographic keys and secrets in environment variables or secure key management services rather than embedding them directly in the source code.",
+          "recommended_fix": "import os\n\nJWT_SECRET_KEY = os.environ.get(\"JWT_SECRET_KEY\")\nif not JWT_SECRET_KEY:\n    raise ValueError(\"JWT_SECRET_KEY environment variable is not set\")",
+          "references": [
+            "https://cwe.mitre.org/data/definitions/798.html",
+            "https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/"
+          ]
+        },
+        "raw_risk_score": 8.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 8.0,
+      "priority_rank": 6,
+      "is_deduplicated": true,
+      "sources": [
+        "SECURITY_AUDITOR",
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": "Security Auditor recommendation takes precedence over Software Architect simplification/refactoring."
+    },
+    {
+      "finding": {
+        "id": "ARCH-003",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Resource Management",
+        "cwe_id": "CWE-400",
+        "owasp_category": "A04:2021 – Insecure Design",
+        "title": "Unbuffered Memory Exhaustion Risk (Unbounded Result Set Fetch)",
+        "description": "The export_data action fetches all records from the database using db_session.fetchall() into memory at once without pagination or streaming. This can lead to severe memory exhaustion (OutOfMemory) when the table grows large.",
+        "severity": "MEDIUM",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\admin.py",
+          "start_line": 22,
+          "end_line": 25,
+          "code_snippet": "        elif action == \"export_data\":\n            # Unbuffered memory leak pattern\n            all_records = db_session.fetchall()\n            return all_records"
+        },
+        "remediation": {
+          "explanation": "Large datasets should be processed using generators, chunked fetching, or streaming cursors to prevent unbounded memory consumption.",
+          "recommended_fix": "Use cursor iteration or yield records in batches rather than loading the entire result set into a single list.",
+          "references": [
+            "CWE-400: Uncontrolled Resource Consumption",
+            "Python PEP 249 (Database API Specification 2.0) - Cursors"
+          ]
+        },
+        "raw_risk_score": 5.5,
+        "is_advisory_only": true
+      },
+      "risk_score": 5.5,
+      "priority_rank": 7,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "OWASP A01:2021-Broken Access Control",
+        "cwe_id": "CWE-862",
+        "owasp_category": "A01:2021-Broken Access Control",
+        "title": "Insufficient Authorization for Moderator Role Actions",
+        "description": "The function checks if `user_role == \"moderator\"`, but allows execution of `view_user` action which may allow unauthorized data access if the moderator role is not strictly intended to view arbitrary user records without proper scoping.",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\admin.py",
+          "start_line": 25,
+          "end_line": 28,
+          "code_snippet": "    elif user_role == \"moderator\":\n        if action == \"view_user\":\n            return db_session.execute(\"SELECT * FROM users WHERE id = ?\", (payload.get(\"target_id\"),))\n    return False"
+        },
+        "remediation": {
+          "explanation": "Ensure strict role-based access control (RBAC) checks and verify that the user performing the action has ownership or explicit permission to view the target record.",
+          "recommended_fix": "if user_role == \"moderator\" and has_permission(current_user, \"view_user\", payload.get(\"target_id\")):\n    # execute query",
+          "references": [
+            "https://cwe.mitre.org/data/definitions/862.html",
+            "https://owasp.org/Top10/A01_2021-Broken_Access_Control/"
+          ]
+        },
+        "raw_risk_score": 4.2,
+        "is_advisory_only": true
+      },
+      "risk_score": 4.2,
+      "priority_rank": 8,
+      "is_deduplicated": false,
+      "sources": [
+        "SECURITY_AUDITOR"
+      ],
+      "arbitration_notes": null
+    }
+  ],
+  "severity_distribution": {
+    "CRITICAL": 2,
+    "HIGH": 4,
+    "MEDIUM": 2,
+    "LOW": 0,
+    "INFO": 0
+  },
+  "risk_summary": {
+    "total_findings": 8,
+    "average_risk_score": 7.71,
+    "max_risk_score": 10.0,
+    "critical_count": 2,
+    "high_count": 4,
+    "deduplicated_count": 3
+  },
+  "agent_metrics": {
+    "total_agent_calls": 8,
+    "successful_agent_calls": 8,
+    "failed_agent_calls": 0,
+    "total_execution_time_ms": 83055.49,
+    "total_tokens_used": 0,
+    "by_role": {
+      "SECURITY_AUDITOR": {
+        "calls": 4,
+        "success": 4,
+        "failed": 0,
+        "execution_time_ms": 33035.4111000197,
+        "findings_count": 4,
+        "tokens_used": 0
+      },
+      "SOFTWARE_ARCHITECT": {
+        "calls": 4,
+        "success": 4,
+        "failed": 0,
+        "execution_time_ms": 50020.082300005015,
+        "findings_count": 7,
+        "tokens_used": 0
+      }
+    }
+  },
+  "advisory_disclaimer": "This review report contains purely advisory recommendations for developer evaluation. No source code modifications have been applied automatically."
+}

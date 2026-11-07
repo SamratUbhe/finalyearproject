@@ -1,0 +1,32 @@
+0000000000000000000000000000000000000000 5650ba583595a08f398051e8bb0c9e8a08d9068a 1793816294 chore: initial repository scaffolding
+5650ba583595a08f398051e8bb0c9e8a08d9068a 309f8eeff8e87800e9dad1573a985fa070208bb0 1793816325 feat(phase-1): initialize dependencies, environment template, and configuration manager
+309f8eeff8e87800e9dad1573a985fa070208bb0 17b26ec743f003590838100eb5d9ffb782cd8c0a 1793817211 feat(phase-1): implement Pydantic domain models and assemble FastAPI application with health check
+17b26ec743f003590838100eb5d9ffb782cd8c0a 16723ce46c453f4f6be2694b272264972782367b 1793817260 docs(phase-1): add Plan 1.01 execution summary
+16723ce46c453f4f6be2694b272264972782367b 3654f8a4fb2a83075917d52b9a62ac2186dd942b 1793817604 feat(phase-1): build local directory traversal scanner with path filtering and gitignore
+3654f8a4fb2a83075917d52b9a62ac2186dd942b 410c8f2359ab518c58c5d888ffdf0d11aa21a724 1793817707 feat(phase-1): build remote github repository ingestion engine
+410c8f2359ab518c58c5d888ffdf0d11aa21a724 43d142299c8d0570e8276b8550735c114be67458 1793871664 feat(phase-1): build python ast structural extractor
+43d142299c8d0570e8276b8550735c114be67458 b6353fb94906519a479c42865386326e0f1c9b7f 1793871843 feat(phase-1): build js and ts syntax-aware parser
+b6353fb94906519a479c42865386326e0f1c9b7f 0000575602fef799698cfc8009c2907e3dcbc316 1793872008 feat(phase-1): build context preparation engine and api route
+0000575602fef799698cfc8009c2907e3dcbc316 4ff8d3eca1fe758e277cbe0b2fa73e970504af6f 1793872056 docs(phase-1): document plan 1.03 execution summary
+4ff8d3eca1fe758e277cbe0b2fa73e970504af6f aadf9728fc9fa25bd1900677b9efced4a58c9741 1793957235 feat(phase-2): extend configuration and implement review domain models with advisory safety
+aadf9728fc9fa25bd1900677b9efced4a58c9741 5f2b02803ee185d7797f291eed0226f8d3ebcfd3 1793957380 feat(phase-2): build asynchronous gemini client with structured json and retries
+5f2b02803ee185d7797f291eed0226f8d3ebcfd3 37c0dafd4b29ea5405dd93e17ab11c87051bbf71 1793957610 feat(phase-2): implement security auditor and software architect specialized agents
+37c0dafd4b29ea5405dd93e17ab11c87051bbf71 bc631d6dab8952583d5bc94dcec48d7b3c04b4e5 1793957665 docs(phase-2): document plan 2.01 execution summary
+bc631d6dab8952583d5bc94dcec48d7b3c04b4e5 b950ff3ad95b9bcb5a873725bc0d9f2922cbe527 1793957703 docs(state): update state after plan 2.01 execution
+b950ff3ad95b9bcb5a873725bc0d9f2922cbe527 c15a2be8d48cc159d874987805fa242a7b4d4b4e 1793958191 feat(phase-2): build concurrency-controlled parallel multi-agent orchestrator
+c15a2be8d48cc159d874987805fa242a7b4d4b4e 4218fbed43dd36a46046b9cd9e2faf5909fe7096 1793958511 test(phase-2): build orchestrator integration and resilience test suite
+4218fbed43dd36a46046b9cd9e2faf5909fe7096 77bab2c4cc72531f0549f9dd883459747c53602d 1793958868 feat(phase-2): build review moderator agent with deduplication, arbitration, and risk scoring
+77bab2c4cc72531f0549f9dd883459747c53602d 38c2966b4a4572becf79e27613e83d5178662699 1793959610 feat(phase-2): build review API endpoints and verify full pipeline end-to-end
+38c2966b4a4572becf79e27613e83d5178662699 ff8fbfa7aa884727108d63cdd84be193a697aa9e 1793961871 feat(phase-3): add rich dependencies and build terminal presentation formatting module
+ff8fbfa7aa884727108d63cdd84be193a697aa9e a7e7268c039300c63b7b3ae16f0a012a23d82a4c 1793962007 feat(phase-3): implement scan execution runner and rich CLI entrypoint
+a7e7268c039300c63b7b3ae16f0a012a23d82a4c dbe800f6d18fd7d244f5660a1b58a04e1aed10e4 1793962770 feat(phase-3): build CLI test suite and verify commands and formatting
+dbe800f6d18fd7d244f5660a1b58a04e1aed10e4 10a79dad1dfd16737d9d107849a1ede35e45c218 1793962850 docs(phase-3): document plan 3.01 execution summary and update state
+10a79dad1dfd16737d9d107849a1ede35e45c218 6322863a6a82e883a13204984d0f9d6dda5df143 1793963160 feat(phase-3): build review history storage and comparison engine
+6322863a6a82e883a13204984d0f9d6dda5df143 33869c455ab3b67f23d9b3f4f1a80121e65939bb 1793964438 feat(phase-3): implement history api endpoints, auto-saving, and cli history command
+33869c455ab3b67f23d9b3f4f1a80121e65939bb d75780682355f72e5baf6ddca7b1bc5245d938cc 1793982811 feat(phase-3): build test suite for review history storage, comparison engine, and api routes
+d75780682355f72e5baf6ddca7b1bc5245d938cc 82a14435838e8d2e5ca078c69d893f6dd4f94cf6 1793982913 docs(phase-3): document plan 3.02 execution summary and update state
+82a14435838e8d2e5ca078c69d893f6dd4f94cf6 bbddd0847395b4fce8193aad377a5688f858c51c 1793983899 feat(phase-3): build responsive dashboard UI layout and styling
+bbddd0847395b4fce8193aad377a5688f858c51c 780a6a29346872dac29566ce970bfbaae28e220a 1793984019 feat(phase-3): implement frontend client logic and dashboard review runner endpoints
+780a6a29346872dac29566ce970bfbaae28e220a 7329405d65e232856b5135cc57a37738e07f3dff 1793985918 feat(phase-3): mount dashboard to fastapi and build integration test suite
+7329405d65e232856b5135cc57a37738e07f3dff 10c44d861888dcb460332a5ded0c1c5440ddf1cc 1793985971 docs(phase-3): document plan 3.03 execution summary and update state
+10c44d861888dcb460332a5ded0c1c5440ddf1cc 22c72433ac2f80e8b284ac47aa2c851febdc647f 1794041782 feat(phase-4): build standalone HTML report generator module

@@ -1,0 +1,101 @@
+{
+  "review_id": "rev-cli-test-1",
+  "repo_id": "repo-cli-123",
+  "created_at": "2026-11-06T12:00:00Z",
+  "status": "completed",
+  "total_files_reviewed": 2,
+  "total_chunks_reviewed": 5,
+  "findings": [
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "Injection",
+        "cwe_id": "CWE-89",
+        "owasp_category": "A03:2021-Injection",
+        "title": "SQL Injection Vulnerability",
+        "description": "Unsanitized user input is concatenated into an SQL query string.",
+        "severity": "CRITICAL",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "src/database/query.py",
+          "start_line": 12,
+          "end_line": 14,
+          "code_snippet": "query = f\"SELECT * FROM users WHERE id = {user_id}\"\ncursor.execute(query)"
+        },
+        "remediation": {
+          "explanation": "Use parameterized queries rather than string formatting.",
+          "recommended_fix": "cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))",
+          "references": [
+            "https://owasp.org/Top10/A03_2021-Injection/"
+          ]
+        },
+        "raw_risk_score": 10.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 10.0,
+      "priority_rank": 1,
+      "is_deduplicated": false,
+      "sources": [
+        "SECURITY_AUDITOR"
+      ],
+      "arbitration_notes": "Verified security vulnerability with clear code evidence."
+    },
+    {
+      "finding": {
+        "id": "ARCH-002",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Maintainability",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "High Cyclomatic Complexity",
+        "description": "Function contains excessive branching nesting exceeding thresholds.",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "evidence": {
+          "file_path": "src/services/billing.py",
+          "start_line": 45,
+          "end_line": 50,
+          "code_snippet": "if a:\n    if b:\n        return c"
+        },
+        "remediation": {
+          "explanation": "Decompose nested branches into guard clauses.",
+          "recommended_fix": "if not a or not b:\n    return None\nreturn c",
+          "references": []
+        },
+        "raw_risk_score": 5.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 5.0,
+      "priority_rank": 2,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    }
+  ],
+  "severity_distribution": {
+    "CRITICAL": 1,
+    "HIGH": 0,
+    "MEDIUM": 1,
+    "LOW": 0,
+    "INFO": 0
+  },
+  "risk_summary": {
+    "total_findings": 2,
+    "average_risk_score": 7.5,
+    "max_risk_score": 10.0,
+    "critical_count": 1,
+    "high_count": 0,
+    "deduplicated_count": 0
+  },
+  "agent_metrics": {
+    "total_agent_calls": 10,
+    "successful_agent_calls": 10,
+    "failed_agent_calls": 0,
+    "total_execution_time_ms": 1200.0,
+    "total_tokens_used": 1500
+  },
+  "advisory_disclaimer": "This review report contains purely advisory recommendations for developer evaluation. No source code modifications have been applied automatically."
+}

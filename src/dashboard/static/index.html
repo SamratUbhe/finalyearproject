@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automated Code Vulnerability Reviewer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="top-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">🛡️</div>
+        <div>
+          <span class="brand-title">Automated Code Vulnerability Reviewer</span>
+          <span class="version-badge">v1.0.0</span>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div id="backend-status" class="status-indicator">
+          <span class="status-dot"></span>
+          <span id="backend-status-text">Backend Connected</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <div class="tabs-container">
+      <button class="tab-btn active" id="tab-nav-new" onclick="switchTab('new-review')">
+        <span>🚀</span> New Review
+      </button>
+      <button class="tab-btn" id="tab-nav-findings" onclick="switchTab('findings')">
+        <span>🔍</span> Findings Explorer
+        <span class="tab-badge" id="tab-findings-count">0</span>
+      </button>
+      <button class="tab-btn" id="tab-nav-history" onclick="switchTab('history')">
+        <span>📜</span> Review History &amp; Comparison
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Views Container -->
+  <main class="main-content">
+    <div id="global-error" class="error-banner"></div>
+
+    <!-- TAB 1: New Review -->
+    <section id="view-new-review" class="view-section active">
+      <div class="dashboard-card">
+        <h2 class="card-title"><span>🎯</span> Target Configuration</h2>
+        <p class="card-subtitle">Launch AST-guided automated vulnerability inspection on local repositories or remote GitHub source code.</p>
+
+        <!-- Source Selector -->
+        <div class="source-type-selector">
+          <button type="button" class="source-toggle-btn active" id="btn-src-local" onclick="setSourceType('local')">
+            <span>💻</span> Local Folder Path
+          </button>
+          <button type="button" class="source-toggle-btn" id="btn-src-github" onclick="setSourceType('github')">
+            <span>🌐</span> GitHub Repository
+          </button>
+        </div>
+
+        <!-- Local Form -->
+        <div id="form-group-local">
+          <div class="form-group">
+            <label class="form-label" for="local-path">Repository Directory Path <small>(Absolute or relative path)</small></label>
+            <input type="text" id="local-path" class="form-input" placeholder="e.g. . or ./samples/vulnerable_repo" value=".">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="local-ignores">Extra Ignore Patterns <small>(Comma-separated, e.g. tests/,*.tmp)</small></label>
+            <input type="text" id="local-ignores" class="form-input" placeholder="e.g. node_modules,dist,build">
+          </div>
+        </div>
+
+        <!-- GitHub Form -->
+        <div id="form-group-github" style="display: none;">
+          <div class="form-group">
+            <label class="form-label" for="github-url">GitHub Repository URL <small>(HTTPS or SSH)</small></label>
+            <input type="text" id="github-url" class="form-input" placeholder="https://github.com/owner/repository">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="github-ref">Branch, Tag, or Commit SHA <small>(Optional)</small></label>
+              <input type="text" id="github-ref" class="form-input" placeholder="main">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="github-token">Personal Access Token <small>(Optional for private repos)</small></label>
+              <input type="password" id="github-token" class="form-input" placeholder="ghp_************************">
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-primary" id="btn-start-review" onclick="startReview()">
+          <span id="btn-start-review-spinner" class="spinner" style="display: none;"></span>
+          <span id="btn-start-review-text">Launch Vulnerability Review</span>
+        </button>
+      </div>
+
+      <!-- Live Agent Telemetry Panel -->
+      <div class="dashboard-card" id="telemetry-panel">
+        <h2 class="card-title"><span>📡</span> Live Agent Telemetry &amp; Execution Pipeline</h2>
+        <p class="card-subtitle">Real-time status, execution progress, and metrics across multi-agent analysis.</p>
+
+        <!-- Stepper -->
+        <div class="pipeline-stepper">
+          <div class="pipeline-step" id="step-ingestion">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-name">Ingestion</div>
+              <div class="step-desc" id="step-desc-ingestion">File tree filtering</div>
+            </div>
+          </div>
+          <div class="pipeline-step" id="step-context">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-name">AST Context</div>
+              <div class="step-desc" id="step-desc-context">Chunking &amp; scopes</div>
+            </div>
+          </div>
+          <div class="pipeline-step" id="step-analysis">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-name">Parallel Analysis</div>
+              <div class="step-desc" id="step-desc-analysis">Security &amp; Architecture</div>
+            </div>
+          </div>
+          <div class="pipeline-step" id="step-moderation">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-name">Moderation</div>
+              <div class="step-desc" id="step-desc-moderation">Arbitration &amp; risk scoring</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry Cards -->
+        <div class="telemetry-grid">
+          <!-- Security Auditor -->
+          <div class="agent-card">
+            <div class="agent-card-header">
+              <span class="agent-role"><span>🛡️</span> Security Auditor</span>
+              <span class="agent-status-pill agent-status-idle" id="agent-sec-status">IDLE</span>
+            </div>
+            <div class="agent-meta-row">
+              <span>Findings Discovered:</span>
+              <span class="agent-meta-val" id="agent-sec-findings">0</span>
+            </div>
+            <div class="agent-meta-row">
+              <span>Execution Time:</span>
+              <span class="agent-meta-val" id="agent-sec-time">0.0s</span>
+            </div>
+            <span class="agent-badge">OWASP Top 10 &amp; CWE Verification</span>
+          </div>
+
+          <!-- Software Architect -->
+          <div class="agent-card">
+            <div class="agent-card-header">
+              <span class="agent-role"><span>📐</span> Software Architect</span>
+              <span class="agent-status-pill agent-status-idle" id="agent-arch-status">IDLE</span>
+            </div>
+            <div class="agent-meta-row">
+              <span>Findings Discovered:</span>
+              <span class="agent-meta-val" id="agent-arch-findings">0</span>
+            </div>
+            <div class="agent-meta-row">
+              <span>Execution Time:</span>
+              <span class="agent-meta-val" id="agent-arch-time">0.0s</span>
+            </div>
+            <span class="agent-badge">Modularity &amp; Resilience Analysis</span>
+          </div>
+
+          <!-- Review Moderator -->
+          <div class="agent-card">
+            <div class="agent-card-header">
+              <span class="agent-role"><span>⚖️</span> Review Moderator</span>
+              <span class="agent-status-pill agent-status-idle" id="agent-mod-status">IDLE</span>
+            </div>
+            <div class="agent-meta-row">
+              <span>Deduplicated Duplicates:</span>
+              <span class="agent-meta-val" id="agent-mod-dedup">0</span>
+            </div>
+            <div class="agent-meta-row">
+              <span>Arbitration Status:</span>
+              <span class="agent-meta-val" id="agent-mod-state">Pending</span>
+            </div>
+            <span class="agent-badge">Mathematical Risk Scoring Matrix</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Findings Explorer -->
+    <section id="view-findings" class="view-section">
+      <!-- Summary Metrics Bar -->
+      <div class="summary-bar">
+        <div class="stat-card stat-total">
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">Total Findings</div>
+        </div>
+        <div class="stat-card stat-critical">
+          <div class="stat-value" id="stat-critical">0</div>
+          <div class="stat-label">Critical</div>
+        </div>
+        <div class="stat-card stat-high">
+          <div class="stat-value" id="stat-high">0</div>
+          <div class="stat-label">High</div>
+        </div>
+        <div class="stat-card stat-medium">
+          <div class="stat-value" id="stat-medium">0</div>
+          <div class="stat-label">Medium</div>
+        </div>
+        <div class="stat-card stat-low">
+          <div class="stat-value" id="stat-low">0</div>
+          <div class="stat-label">Low</div>
+        </div>
+        <div class="stat-card stat-risk">
+          <div class="stat-value" id="stat-max-risk">0.0</div>
+          <div class="stat-label">Max Risk Score</div>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="filter-bar">
+        <div class="filter-row-primary">
+          <div class="search-input-wrap">
+            <input type="text" id="filter-search" class="form-input" placeholder="Search by title, file path, or CWE (e.g. CWE-89)..." oninput="applyFilters()">
+          </div>
+          <select id="filter-agent" class="filter-select" onchange="applyFilters()">
+            <option value="all">All Agents</option>
+            <option value="security_auditor">Security Auditor</option>
+            <option value="software_architect">Software Architect</option>
+          </select>
+          <select id="filter-category" class="filter-select" onchange="applyFilters()">
+            <option value="all">All Categories</option>
+            <option value="injection">Injection</option>
+            <option value="cryptography">Cryptography</option>
+            <option value="complexity">Complexity</option>
+            <option value="resource_management">Resource Management</option>
+            <option value="concurrency">Concurrency</option>
+            <option value="error_handling">Error Handling</option>
+            <option value="architecture">Architecture</option>
+          </select>
+        </div>
+        <div class="severity-pill-group">
+          <span style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.25rem;">Severity:</span>
+          <button type="button" class="sev-btn active" data-sev="all" onclick="setSeverityFilter('all')">All</button>
+          <button type="button" class="sev-btn" data-sev="critical" onclick="setSeverityFilter('critical')">Critical</button>
+          <button type="button" class="sev-btn" data-sev="high" onclick="setSeverityFilter('high')">High</button>
+          <button type="button" class="sev-btn" data-sev="medium" onclick="setSeverityFilter('medium')">Medium</button>
+          <button type="button" class="sev-btn" data-sev="low" onclick="setSeverityFilter('low')">Low</button>
+          <button type="button" class="sev-btn" data-sev="info" onclick="setSeverityFilter('info')">Info</button>
+        </div>
+      </div>
+
+      <!-- Findings List -->
+      <div id="findings-list" class="findings-container">
+        <div class="empty-state">
+          <div class="empty-icon">📂</div>
+          <p>No findings loaded. Launch a review in the "New Review" tab or pick a scan from "Review History".</p>
+        </div>
+      </div>
+
+      <!-- Advisory Disclaimer (REQ-11) -->
+      <div class="advisory-disclaimer-banner">
+        <span>ℹ️</span>
+        <div>
+          <strong>Advisory Guidance Disclaimer:</strong> AI-generated recommendations provide advisory architectural and security guidance. Automated suggestions must be evaluated and verified by qualified developers before deployment.
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: History & Comparison -->
+    <section id="view-history" class="view-section">
+      <div class="dashboard-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h2 class="card-title"><span>📜</span> Review History</h2>
+          <button type="button" class="btn-secondary" onclick="loadHistory()"><span>🔄</span> Refresh</button>
+        </div>
+        <p class="card-subtitle">Inspect historical code review reports stored persistently under <code>.gsd/reviews/</code>.</p>
+
+        <div class="history-table-container">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Review ID</th>
+                <th>Repository</th>
+                <th>Date &amp; Time</th>
+                <th>Findings</th>
+                <th>Critical</th>
+                <th>Max Risk</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-dim);">Loading past reviews...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Scan Comparison Panel -->
+      <div class="dashboard-card comparison-card">
+        <h2 class="card-title"><span>⚖️</span> Side-by-Side Scan Comparison</h2>
+        <p class="card-subtitle">Compare two review scans to analyze security regressions, newly introduced vulnerabilities, and resolved issues.</p>
+
+        <div class="form-row" style="margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" for="compare-base-select">Base Scan (V1):</label>
+            <select id="compare-base-select" class="form-input"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="compare-target-select">Target Scan (V2):</label>
+            <select id="compare-target-select" class="form-input"></select>
+          </div>
+        </div>
+
+        <button type="button" class="btn-primary" id="btn-compare" onclick="compareScans()">
+          <span>📊</span> Compare Scans
+        </button>
+
+        <!-- Diff Results Output -->
+        <div id="compare-results" style="display: none; margin-top: 1.5rem;">
+          <div class="diff-grid">
+            <div class="diff-stat stat-new">
+              <div class="stat-value" id="diff-new-count" style="color: var(--sev-critical-text);">0</div>
+              <div class="stat-label">New Findings (+)</div>
+            </div>
+            <div class="diff-stat stat-resolved">
+              <div class="stat-value" id="diff-resolved-count" style="color: var(--accent-green);">0</div>
+              <div class="stat-label">Resolved Findings (-)</div>
+            </div>
+            <div class="diff-stat stat-persistent">
+              <div class="stat-value" id="diff-persistent-count" style="color: var(--sev-medium-text);">0</div>
+              <div class="stat-label">Persistent Findings (=)</div>
+            </div>
+            <div class="diff-stat stat-delta">
+              <div class="stat-value" id="diff-risk-delta" style="color: #c4b5fd;">0.0</div>
+              <div class="stat-label">Risk Delta</div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 1rem; margin: 1.5rem 0 0.75rem 0; color: var(--text-main);">Comparison Finding Breakdown:</h3>
+          <div id="diff-findings-list" class="diff-findings-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
+

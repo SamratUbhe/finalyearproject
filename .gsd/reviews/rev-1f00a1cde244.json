@@ -1,0 +1,304 @@
+{
+  "review_id": "rev-1f00a1cde244",
+  "repo_id": "34416158264e",
+  "created_at": "2026-11-06T19:24:10.425553+00:00",
+  "status": "completed",
+  "total_files_reviewed": 27,
+  "total_chunks_reviewed": 16,
+  "findings": [
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Code Quality / Complexity",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "Reference to undefined variable `featured`",
+        "description": "The component references a `featured` array (e.g., `featured[0].cover`, `featured[0].name`, `featured[0].tagline`) without importing it or defining it locally within the component scope. This will lead to a runtime ReferenceError when the component attempts to render.",
+        "severity": "CRITICAL",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\AppData\\Local\\Temp\\gsd_github_mfkj9k67\\unpacked\\SamratUbhe-apple-music-af192ae\\src\\components\\Radio.tsx",
+          "start_line": 21,
+          "end_line": 23,
+          "code_snippet": "<img\n  src={featured[0].cover}\n  alt={featured[0].name}\n  className=\"w-full h-full object-cover group-hover:scale-105 transition-transform duration-500\"\n/>"
+        },
+        "remediation": {
+          "explanation": "Ensure all required mock data or state variables are properly imported from mock data sources or managed via component state to avoid runtime failures.",
+          "recommended_fix": "Import `featured` from `../data/mockData` or derive it appropriately from available datasets.",
+          "references": [
+            "Clean Code - Meaningful Names",
+            "React Component Best Practices"
+          ]
+        },
+        "raw_risk_score": 10.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 10.0,
+      "priority_rank": 1,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Code Quality / Complexity",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "Uncontrolled Component State and Disconnected Search Input",
+        "description": "The Browse component accepts a `searchQuery` prop, but renders an internal search input element that lacks a `value` and `onChange` handler. Consequently, typing into this input field will not update the parent component's state or trigger the filtering logic, rendering the input effectively non-functional and introducing confusion for maintainers and users.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\AppData\\Local\\Temp\\gsd_github_mfkj9k67\\unpacked\\SamratUbhe-apple-music-af192ae\\src\\components\\Browse.tsx",
+          "start_line": 28,
+          "end_line": 37,
+          "code_snippet": "<div className=\"mb-8 relative\">\n          <Search size={16} className=\"absolute left-4 top-1/2 -translate-y-1/2 text-white/40\" />\n          <input\n            type=\"text\"\n            placeholder=\"Artists, songs, lyrics, and more\"\n            className=\"w-full bg-white/10 text-white text-[15px] placeholder-white/40 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:bg-white/15 transition-colors\"\n          />\n        </div>"
+        },
+        "remediation": {
+          "explanation": "Connecting the input element to state management ensures proper data flow and interactivity, adhering to standard React patterns where inputs are properly controlled.",
+          "recommended_fix": "Accept an `onSearchChange` callback prop or lift the search state management appropriately, then bind the input's `value` and `onChange` event to it.",
+          "references": [
+            "React Documentation: Controlled Components",
+            "Single Responsibility Principle"
+          ]
+        },
+        "raw_risk_score": 8.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 8.0,
+      "priority_rank": 2,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-002",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Code Quality / Complexity",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "Single Responsibility Principle violation: Player component handles multiple domains",
+        "description": "The Player component directly manages track state, playback progress intervals, volume control, mute toggles, shuffle/repeat states, liked status, and layout rendering all within a single monolithic function.",
+        "severity": "MEDIUM",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\AppData\\Local\\Temp\\gsd_github_mfkj9k67\\unpacked\\SamratUbhe-apple-music-af192ae\\src\\components\\Player.tsx",
+          "start_line": 23,
+          "end_line": 190,
+          "code_snippet": "export default function Player({ onQueueToggle, showQueue }: PlayerProps) {\n  const [isPlaying, setIsPlaying] = useState(false);\n  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);\n  const [progress, setProgress] = useState(34);\n  const [volume, setVolume] = useState(80);\n  ..."
+        },
+        "remediation": {
+          "explanation": "Splitting the component into smaller sub-components (e.g., TrackInfo, PlaybackControls, VolumeControls) and extracting custom hooks for player logic improves testability and separation of concerns.",
+          "recommended_fix": "Extract state management into a custom hook such as usePlayerState() and decompose the JSX into smaller presentation components.",
+          "references": [
+            "Single Responsibility Principle (SRP)",
+            "Clean Components Architecture"
+          ]
+        },
+        "raw_risk_score": 5.5,
+        "is_advisory_only": true
+      },
+      "risk_score": 5.5,
+      "priority_rank": 3,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Code Quality / Complexity",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "Direct Coupling to Hardcoded Mock Data",
+        "description": "The Queue component imports and directly renders queueTracks from a static mock data source (../data/mockData). This creates tight coupling between the presentational component and test data, preventing the component from receiving dynamic playback state or a customized track list via props.",
+        "severity": "MEDIUM",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\AppData\\Local\\Temp\\gsd_github_mfkj9k67\\unpacked\\SamratUbhe-apple-music-af192ae\\src\\components\\Queue.tsx",
+          "start_line": 8,
+          "end_line": 67,
+          "code_snippet": "export default function Queue({ onClose }: QueueProps) {\n  return (\n    <div className=\"w-72 glass-dark border-l border-white/10 flex flex-col shrink-0\">\n      <div className=\"flex items-center justify-between px-5 py-4 border-b border-white/10\">\n        <h2 className=\"text-white font-semibold text-[15px]\">Up Next</h2>\n        <button onClick={onClose} className=\"text-white/40 hover:text-white transition-colors\">\n          <X size={16} />\n        </button>\n      </div>\n\n      <div className=\"flex-1 overflow-y-auto py-2\">\n        <div className=\"px-3 mb-1\">\n          <p className=\"text-[11px] font-semibold text-[#ebebf566] uppercase tracking-wider px-2 py-1\">Now Playing</p>\n          <div className=\"flex items-center gap-3 px-2 py-2 rounded-lg glass-sm\">\n            <img\n              src={queueTracks[0].cover}\n              alt={queueTracks[0].album}\n              className=\"w-10 h-10 rounded-md object-cover\"\n            />\n            <div className=\"min-w-0 flex-1\">\n              <p className=\"text-white text-[13px] font-medium truncate\">{queueTracks[0].title}</p>\n              <p className=\"text-[#ebebf580] text-[12px] truncate\">{queueTracks[0].artist}</p>\n            </div>\n            <div className=\"flex gap-0.5 items-end h-4 shrink-0\">\n              <div className=\"w-0.5 bg-[#fc3c44] animate-music-bar1 rounded-full\" style={{ height: '60%' }} />\n              <div className=\"w-0.5 bg-[#fc3c44] animate-music-bar2 rounded-full\" style={{ height: '100%' }} />\n              <div className=\"w-0.5 bg-[#fc3c44] animate-music-bar1 rounded-full\" style={{ height: '40%' }} />\n            </div>\n          </div>\n        </div>\n\n        <div className=\"px-3 mt-3\">\n          <p className=\"text-[11px] font-semibold text-[#ebebf566] uppercase tracking-wider px-2 py-1\">Queue</p>\n          {queueTracks.slice(1).map((track, idx) => (\n            <button\n              key={track.id}\n              className=\"w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors group\"\n            >\n              <div className=\"relative\">\n                <img\n                  src={track.cover}\n                  alt={track.album}\n                  className=\"w-10 h-10 rounded-md object-cover\"\n                />\n                <div className=\"absolute inset-0 rounded-md bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center\">\n                  <Music2 size={12} className=\"text-white\" />\n                </div>\n              </div>\n              <div className=\"min-w-0 flex-1 text-left\">\n                <p className=\"text-white text-[13px] font-medium truncate\">{track.title}</p>\n                <p className=\"text-[#ebebf580] text-[12px] truncate\">{track.artist}</p>\n              </div>\n              <span className=\"text-[11px] text-white/30 shrink-0\">{track.duration}</span>\n            </button>\n          ))}\n        </div>\n      </div>\n    </div>\n  );\n}"
+        },
+        "remediation": {
+          "explanation": "Decoupling components from static mock data increases reusability and enables proper state management via props.",
+          "recommended_fix": "Accept currentTrack and queue as component props instead of importing mock data directly inside the component.",
+          "references": [
+            "Separation of Concerns",
+            "React Component Best Practices"
+          ]
+        },
+        "raw_risk_score": 5.5,
+        "is_advisory_only": true
+      },
+      "risk_score": 5.5,
+      "priority_rank": 4,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Code Quality / Complexity",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "Structural Duplication and Lack of Component Decomposition in ListenNow",
+        "description": "The ListenNow component renders multiple distinct content sections (\"Recently Played\", \"New Releases\", \"Made For You\") with nearly identical structural layouts, recurring headers, and horizontal scroll containers. Additionally, the component directly imports static mock data instead of receiving data via props or context, reducing modularity, reusability, and testability.",
+        "severity": "LOW",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\AppData\\Local\\Temp\\gsd_github_mfkj9k67\\unpacked\\SamratUbhe-apple-music-af192ae\\src\\components\\ListenNow.tsx",
+          "start_line": 50,
+          "end_line": 102,
+          "code_snippet": "      <div className=\"px-8 py-6 space-y-8\">\n        <section>\n          <div className=\"flex items-center justify-between mb-4\">\n            <h2 className=\"text-white text-[19px] font-bold tracking-tight\">Recently Played</h2>\n            <button className=\"flex items-center gap-1 text-[#fc3c44] text-[13px] font-medium hover:text-[#e0323a] transition-colors\">\n              See All <ChevronRight size={14} />\n            </button>\n          </div>\n          <div className=\"flex gap-4 overflow-x-auto pb-2 scrollbar-hide\">\n            {recentlyPlayed.map((album) => (\n              <AlbumCard key={album.id} item={album} />\n            ))}\n          </div>\n        </section>\n\n        <div className=\"h-px bg-white/5\" />\n\n        <section>\n          <div className=\"flex items-center justify-between mb-4\">\n            <h2 className=\"text-white text-[19px] font-bold tracking-tight\">New Releases</h2>\n            <button className=\"flex items-center gap-1 text-[#fc3c44] text-[13px] font-medium hover:text-[#e0323a] transition-colors\">\n              See All <ChevronRight size={14} />\n            </button>\n          </div>\n          <div className=\"flex gap-4 overflow-x-auto pb-2 scrollbar-hide\">\n            {newReleases.map((album) => (\n              <AlbumCard key={album.id} item={album} />\n            ))}\n          </div>\n        </section>"
+        },
+        "remediation": {
+          "explanation": "Extracting the recurring section structure into a reusable sub-component (e.g., MediaSection) reduces code duplication, lowers cognitive complexity, and improves separation of concerns by isolating presentation layout from domain data sources.",
+          "recommended_fix": "Create a reusable MediaSection component that accepts a title, items list, and rendering callback or size variant as props.",
+          "references": [
+            "Single Responsibility Principle (SRP)",
+            "Clean Code: Functions should do one thing",
+            "React Component Composition Patterns"
+          ]
+        },
+        "raw_risk_score": 3.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 3.0,
+      "priority_rank": 5,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Resource Management",
+        "cwe_id": "CWE-400",
+        "owasp_category": null,
+        "title": "Manual interval timer used for audio/track progress simulation",
+        "description": "The component uses a React useEffect hook combined with setInterval to manually simulate track progress increments every 100ms. Managing playback timing via manual JavaScript intervals can lead to drift, unnecessary re-renders, and potential timer leaks if cleanup fails or state updates outpace the interval tick.",
+        "severity": "LOW",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\AppData\\Local\\Temp\\gsd_github_mfkj9k67\\unpacked\\SamratUbhe-apple-music-af192ae\\src\\components\\Player.tsx",
+          "start_line": 31,
+          "end_line": 48,
+          "code_snippet": "  useEffect(() => {\n    if (isPlaying) {\n      intervalRef.current = setInterval(() => {\n        setProgress((p) => {\n          if (p >= 100) {\n            setCurrentTrackIndex((i) => (i + 1) % queueTracks.length);\n            return 0;\n          }\n          return p + 0.1;\n        });\n      }, 100);\n    } else {\n      if (intervalRef.current) clearInterval(intervalRef.current);\n    }\n    return () => {\n      if (intervalRef.current) clearInterval(intervalRef.current);\n    };\n  }, [isPlaying]);"
+        },
+        "remediation": {
+          "explanation": "Using HTML5 Audio APIs or requestAnimationFrame provides more accurate timing for media playback components and decouples UI state updates from manual interval management.",
+          "recommended_fix": "Consider leveraging standard HTML5 <audio> elements or native media hooks to drive playback progress rather than custom interval state tickers.",
+          "references": [
+            "React Hooks Lifecycle Best Practices",
+            "HTML5 Media API Guidelines"
+          ]
+        },
+        "raw_risk_score": 3.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 3.0,
+      "priority_rank": 6,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Code Quality / Complexity",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "Structural Duplication in Navigation Items",
+        "description": "The Sidebar component explicitly repeats button structures and conditional active-state styling for primary navigation items ('Listen Now', 'Browse', 'Radio') instead of using a data-driven mapping approach similar to the library items section.",
+        "severity": "LOW",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\AppData\\Local\\Temp\\gsd_github_mfkj9k67\\unpacked\\SamratUbhe-apple-music-af192ae\\src\\components\\Sidebar.tsx",
+          "start_line": 15,
+          "end_line": 56,
+          "code_snippet": "        <nav className=\"space-y-0.5\">\n          <button\n            onClick={() => onViewChange('listen-now')}\n            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${\n              activeView === 'listen-now'\n                ? 'bg-white/10 text-white'\n                : 'text-[#ebebf599] hover:text-white hover:bg-white/5'\n            }`}\n          >\n            <Home size={16} className={activeView === 'listen-now' ? 'text-[#fc3c44]' : ''} />\n            Listen Now\n          </button>\n          <button\n            onClick={() => onViewChange('browse')}\n            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${\n              activeView === 'browse'\n                ? 'bg-white/10 text-white'\n                : 'text-[#ebebf599] hover:text-white hover:bg-white/5'\n            }`}\n          >\n            <Search size={16} className={activeView === 'browse' ? 'text-[#fc3c44]' : ''} />\n            Browse\n          </button>\n          <button\n            onClick={() => onViewChange('radio')}\n            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${\n              activeView === 'radio'\n                ? 'bg-white/10 text-white'\n                : 'text-[#ebebf599] hover:text-white hover:bg-white/5'\n            }`}\n          >\n            <Radio size={16} className={activeView === 'radio' ? 'text-[#fc3c44]' : ''} />\n            Radio\n          </button>\n        </nav>"
+        },
+        "remediation": {
+          "explanation": "Extracting the primary navigation items into a static configuration array mirrors the pattern already used for library items, reducing code duplication and improving maintainability.",
+          "recommended_fix": "Define a navigation items array containing labels, views, and icons, then map over them to render the buttons dynamically.",
+          "references": [
+            "Dry (Don't Repeat Yourself) Principle",
+            "Clean Code: Functions and Component Abstractions"
+          ]
+        },
+        "raw_risk_score": 3.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 3.0,
+      "priority_rank": 7,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    }
+  ],
+  "severity_distribution": {
+    "CRITICAL": 1,
+    "HIGH": 1,
+    "MEDIUM": 2,
+    "LOW": 3,
+    "INFO": 0
+  },
+  "risk_summary": {
+    "total_findings": 7,
+    "average_risk_score": 5.43,
+    "max_risk_score": 10.0,
+    "critical_count": 1,
+    "high_count": 1,
+    "deduplicated_count": 0
+  },
+  "agent_metrics": {
+    "total_agent_calls": 32,
+    "successful_agent_calls": 32,
+    "failed_agent_calls": 0,
+    "total_execution_time_ms": 410227.84,
+    "total_tokens_used": 0,
+    "by_role": {
+      "SECURITY_AUDITOR": {
+        "calls": 16,
+        "success": 16,
+        "failed": 0,
+        "execution_time_ms": 173259.1593999532,
+        "findings_count": 0,
+        "tokens_used": 0
+      },
+      "SOFTWARE_ARCHITECT": {
+        "calls": 16,
+        "success": 16,
+        "failed": 0,
+        "execution_time_ms": 236968.67730020313,
+        "findings_count": 7,
+        "tokens_used": 0
+      }
+    }
+  },
+  "advisory_disclaimer": "This review report contains purely advisory recommendations for developer evaluation. No source code modifications have been applied automatically."
+}
