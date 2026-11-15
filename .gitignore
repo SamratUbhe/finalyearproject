@@ -26,5 +26,6 @@ __pycache__/
 .venv/
 venv/
 
-# Dependencies
-node_modules/
+# Temporary test & scratch dirs
+.pytest_temp/
+scratch/

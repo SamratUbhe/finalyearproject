@@ -109,6 +109,25 @@ def test_static_css_and_js_served(client: TestClient):
     assert "startReview" in js_res.text
 
 
+def test_loki_opener_static_assets_served(client: TestClient):
+    """GET /static/opener.js and logo assets should return 200 OK."""
+    opener_res = client.get("/static/opener.js")
+    assert opener_res.status_code == 200
+    assert "LokiOpener" in opener_res.text
+
+    logo_res = client.get("/static/assets/loki-logo.png")
+    assert logo_res.status_code == 200
+    assert "image/png" in logo_res.headers.get("content-type", "")
+
+    logo_cropped_res = client.get("/static/assets/loki-logo-cropped.png")
+    assert logo_cropped_res.status_code == 200
+    assert "image/png" in logo_cropped_res.headers.get("content-type", "")
+
+    aistudio_res = client.get("/assets/aistudio/IMG_20261107_230930_1a6db8c8.png")
+    assert aistudio_res.status_code == 200
+    assert "image/png" in aistudio_res.headers.get("content-type", "")
+
+
 def test_dashboard_scan_local_success(client: TestClient, tmp_path: Path):
     """POST /api/v1/dashboard/scan with valid local directory returns 200 and saves review."""
     sample_dir = tmp_path / "sample_code"
@@ -224,3 +243,38 @@ def test_all_routes_coexist_without_collision(client: TestClient):
     # Dashboard root route
     dash_res = client.get("/dashboard")
     assert dash_res.status_code == 200
+
+
+def test_dashboard_cancel_scan_endpoint(client: TestClient):
+    """POST /api/v1/dashboard/cancel cancels active scans and returns status 200."""
+    # Test cancelling without active scan ID
+    res = client.post("/api/v1/dashboard/cancel", json={})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "cancelled"
+
+    # Test cancelling with specific scan ID
+    res_id = client.post("/api/v1/dashboard/cancel", json={"scan_id": "nonexistent-scan"})
+    assert res_id.status_code == 200
+    assert res_id.json()["status"] == "cancelled"
+
+
+def test_dashboard_scan_cancellation_handling(client: TestClient, tmp_path: Path):
+    """POST /api/v1/dashboard/scan handles asyncio.CancelledError gracefully returning 400."""
+    sample_dir = tmp_path / "test_cancel"
+    sample_dir.mkdir()
+
+    import asyncio
+    mock_runner = MagicMock()
+    mock_runner.run_scan = AsyncMock(side_effect=asyncio.CancelledError())
+
+    app.dependency_overrides[get_scan_runner] = lambda: mock_runner
+
+    payload = {
+        "source_type": "local",
+        "path_or_url": str(sample_dir),
+    }
+    response = client.post("/api/v1/dashboard/scan", json=payload)
+    assert response.status_code == 400
+    assert "cancelled by user" in response.json()["detail"].lower()
+

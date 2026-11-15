@@ -1,8 +1,10 @@
 """FastAPI router for Local Web Dashboard serving and scan execution."""
 
+import asyncio
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -18,6 +20,9 @@ router = APIRouter(tags=["Dashboard"])
 STATIC_DIR = Path(__file__).parent / "static"
 INDEX_HTML = STATIC_DIR / "index.html"
 
+# Global registry of active scans: scan_id -> asyncio.Task
+active_scans: Dict[str, asyncio.Task] = {}
+
 
 def get_scan_runner() -> CLIScanRunner:
     """Dependency provider for CLIScanRunner."""
@@ -32,11 +37,18 @@ def get_history_storage() -> ReviewHistoryStorage:
 class DashboardScanRequest(BaseModel):
     """Payload for starting a vulnerability scan from the dashboard."""
 
+    scan_id: Optional[str] = Field(default=None, description="Optional client-generated scan ID for cancellation")
     source_type: str = Field(default="local", description="'local' or 'github'")
     path_or_url: str = Field(..., description="Local folder path or GitHub repository URL")
     ref: Optional[str] = Field(default=None, description="Branch, tag, or commit reference")
     token: Optional[str] = Field(default=None, description="Optional GitHub personal access token")
     pr_number: Optional[int] = Field(default=None, description="Optional pull request number")
+
+
+class CancelScanRequest(BaseModel):
+    """Payload for cancelling a running dashboard scan."""
+
+    scan_id: Optional[str] = Field(default=None, description="Identifier of scan to cancel, or omit to cancel all active scans")
 
 
 @router.get("/dashboard", response_class=FileResponse, summary="Serve Web Dashboard single-page application")
@@ -48,6 +60,35 @@ async def get_dashboard() -> FileResponse:
             detail="Dashboard index.html not found.",
         )
     return FileResponse(str(INDEX_HTML), media_type="text/html")
+
+
+@router.post(
+    "/api/v1/dashboard/cancel",
+    status_code=status.HTTP_200_OK,
+    summary="Cancel an active dashboard vulnerability review scan",
+)
+async def cancel_dashboard_scan(
+    request: Optional[CancelScanRequest] = None,
+) -> Dict[str, Any]:
+    """Cancel currently running scan task(s)."""
+    target_id = request.scan_id if request else None
+    cancelled_count = 0
+
+    if target_id and target_id in active_scans:
+        task = active_scans.get(target_id)
+        if task and not task.done():
+            task.cancel()
+            cancelled_count += 1
+            logger.info("Cancelled active scan task for scan_id: %s", target_id)
+    else:
+        # Cancel all active scans if no specific scan_id provided
+        for sid, task in list(active_scans.items()):
+            if not task.done():
+                task.cancel()
+                cancelled_count += 1
+                logger.info("Cancelled active scan task for scan_id: %s", sid)
+
+    return {"status": "cancelled", "cancelled_scans": cancelled_count}
 
 
 @router.post(
@@ -84,6 +125,15 @@ async def run_dashboard_scan(
                 detail=f"Local target path does not exist or is not a directory: '{target}'",
             )
 
+    scan_id = request.scan_id or str(uuid.uuid4())
+    try:
+        current_task = asyncio.current_task()
+        if current_task:
+            active_scans[scan_id] = current_task
+    except RuntimeError:
+        # No running event loop in current context
+        pass
+
     try:
         review = await runner.run_scan(
             target=target,
@@ -99,6 +149,12 @@ async def run_dashboard_scan(
             logger.warning("Failed to persist dashboard review to history: %s", save_err)
 
         return review
+    except asyncio.CancelledError:
+        logger.info("Dashboard scan '%s' cancelled by user request.", scan_id)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Review scan was cancelled by user.",
+        )
     except HTTPException:
         raise
     except FileNotFoundError as fnf_err:
@@ -119,4 +175,7 @@ async def run_dashboard_scan(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Vulnerability review scan failed: {str(exc)}",
         )
+    finally:
+        active_scans.pop(scan_id, None)
+
 

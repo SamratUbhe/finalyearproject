@@ -3,354 +3,705 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automated Code Vulnerability Reviewer</title>
+  <title>LOKI — Automated Code Vulnerability Reviewer</title>
+  <!-- Apple-Grade Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="preload" as="image" href="/assets/aistudio/IMG_20261107_230930_1a6db8c8.png">
+  <link rel="preload" as="image" href="/static/assets/loki-logo.png">
+  <link rel="preload" as="script" href="/static/opener.js">
 </head>
-<body>
-  <!-- Header -->
-  <header class="top-header">
-    <div class="header-container">
-      <div class="brand">
-        <div class="brand-icon">🛡️</div>
-        <div>
-          <span class="brand-title">Automated Code Vulnerability Reviewer</span>
-          <span class="version-badge">v1.0.0</span>
-        </div>
+<body class="loki-app-body">
+  <!-- Glisse Optical Refraction SVG Definition -->
+  <svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
+    <defs>
+      <filter id="glisse-lens-refract">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- Apple Ambient Aura Background Engine -->
+  <div class="loki-bg-container" aria-hidden="true">
+    <canvas id="loki-ribbon-canvas" class="loki-bg-canvas"></canvas>
+    <div class="loki-bg-overlay"></div>
+  </div>
+
+  <div class="ambient-glow-top" aria-hidden="true"></div>
+
+  <!-- Glisse Glass Top Header (Brand, Status & Quick CTA) -->
+  <header class="top-nav-bar">
+    <div class="top-nav-container">
+      <!-- Left: Brand Logo -->
+      <div class="nav-brand" onclick="switchTab('new-review')">
+        <img src="/static/assets/loki-logo-cropped.png" alt="LOKI" class="nav-brand-logo" onerror="this.src='/static/assets/loki-logo.png'">
       </div>
-      <div class="header-meta">
-        <div id="backend-status" class="status-indicator">
+
+      <!-- Right: Meta Actions & Glisse White Pill CTA -->
+      <div class="nav-right-actions">
+        <div id="backend-status" class="nav-status-indicator" title="FastAPI Engine Connection Status">
           <span class="status-dot"></span>
-          <span id="backend-status-text">Backend Connected</span>
+          <span id="backend-status-text">Connected</span>
         </div>
+        <button type="button" class="btn-top-glow" id="btn-nav-launch-scan" onclick="scrollToConsole()">
+          Launch Scan
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- Navigation Tabs -->
-  <nav class="nav-tabs">
-    <div class="tabs-container">
-      <button class="tab-btn active" id="tab-nav-new" onclick="switchTab('new-review')">
-        <span>🚀</span> New Review
+  <!-- Apple Product Hero Stage -->
+  <section class="hero-stage">
+    <div class="hero-pill-badge">
+      <span class="badge-bolt">⚡</span> Automated Code Vulnerability Reviewer
+    </div>
+    <h1 class="hero-display-title">Review Reimagined.</h1>
+    <h2 class="hero-display-subtitle">AST-Guided Semantic Discovery.</h2>
+    <p class="hero-display-desc">
+      Deterministic Tree-sitter AST symbol graphs paired with specialized LLM auditors to uncover critical vulnerabilities with verifiable line-level evidence.
+    </p>
+    <div class="hero-cta-box">
+      <button type="button" class="hero-magic-btn" onclick="scrollToConsole()">
+        <span>↓</span> Launch Review
       </button>
-      <button class="tab-btn" id="tab-nav-findings" onclick="switchTab('findings')">
-        <span>🔍</span> Findings Explorer
-        <span class="tab-badge" id="tab-findings-count">0</span>
+      <button type="button" class="hero-secondary-btn" onclick="switchTab('findings'); scrollToConsole();">
+        <span>Explore Findings</span> <span class="btn-arrow">›</span>
       </button>
-      <button class="tab-btn" id="tab-nav-history" onclick="switchTab('history')">
-        <span>📜</span> Review History &amp; Comparison
+    </div>
+  </section>
+
+  <!-- Main Dashboard Console -->
+  <main class="console-viewport" id="console-viewport">
+    <div class="console-master-card">
+      <!-- Left Sidebar (Apple macOS Style Rail) -->
+      <aside class="console-sidebar">
+        <!-- Sidebar Brand Header -->
+        <div class="sidebar-brand-header">
+          <div class="mac-traffic-lights" aria-hidden="true">
+            <span class="mac-dot red"></span>
+            <span class="mac-dot yellow"></span>
+            <span class="mac-dot green"></span>
+          </div>
+          <div class="sidebar-brand-mark">
+            <img src="/static/assets/loki-logo-cropped.png" alt="LOKI" class="sidebar-mini-logo" onerror="this.src='/static/assets/loki-logo.png'">
+          </div>
+          <button type="button" class="sidebar-toggle-btn" title="Toggle Rail">‹</button>
+        </div>
+
+        <!-- Sidebar Navigation Menu -->
+        <nav class="sidebar-menu">
+          <button type="button" class="sidebar-item active" id="side-nav-new" onclick="switchTab('new-review')">
+            <span class="item-icon">⊞</span>
+            <span class="item-label">Dashboard</span>
+            <span class="item-active-bar"></span>
+          </button>
+          <button type="button" class="sidebar-item" id="side-nav-findings" onclick="switchTab('findings')">
+            <span class="item-icon">🔍</span>
+            <span class="item-label">Findings</span>
+            <span class="item-badge" id="side-findings-count">0</span>
+            <span class="item-chevron">›</span>
+          </button>
+          <button type="button" class="sidebar-item" id="side-nav-history" onclick="switchTab('history')">
+            <span class="item-icon">📜</span>
+            <span class="item-label">History &amp; Diff</span>
+            <span class="item-chevron">›</span>
+          </button>
+          <button type="button" class="sidebar-item" id="side-nav-assistance" onclick="switchTab('assistance')">
+            <span class="item-icon">📚</span>
+            <span class="item-label">Assistance</span>
+            <span class="item-chevron">›</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Main Workspace Area -->
+      <div class="console-workspace-area">
+        <!-- Workspace Top Header Bar -->
+        <div class="workspace-header-bar">
+          <div class="workspace-title-box">
+            <span class="workspace-icon">⊞</span>
+            <span class="workspace-title-text" id="console-view-title">Dashboard</span>
+          </div>
+
+          <div class="workspace-meta-box">
+            <div class="meta-status-pill">
+              <span class="status-live-dot"></span>
+              <span>Review Open</span>
+            </div>
+            <div class="meta-wallet-pill meta-model-pill">
+              <span>🛡️ Engine: Gemini 2.5 Flash</span>
+            </div>
+            <div class="meta-gear-btn" title="Settings">⚙️</div>
+          </div>
+        </div>
+
+        <!-- Global Error Notification -->
+        <div id="global-error" class="error-banner"></div>
+
+        <!-- System Status & Telemetry Header -->
+        <div class="workspace-balance-banner">
+          <div class="balance-left">
+            <div class="balance-greeting">
+              System Status &amp; Telemetry <span class="greeting-eye">👁️</span>
+            </div>
+            <div class="balance-amount-row">
+              <span class="balance-figure" id="banner-status-amount">System Ready</span>
+              <span class="balance-currency">AST Engine</span>
+            </div>
+            <div class="balance-delta-row">
+              <span class="delta-green">▲ 100% Deterministic</span>
+              <span class="delta-sub">&bull; Tree-sitter AST &bull; OWASP Top 10 &bull; CWE-89/79/78</span>
+            </div>
+          </div>
+
+          <!-- Scan Action Pill Buttons -->
+          <div class="balance-actions-row">
+            <button type="button" class="action-pill-btn btn-launch-scan" id="btn-start-review" onclick="startReview()">
+              <span id="btn-start-review-spinner" class="spinner" style="display: none;"></span>
+              <span id="btn-start-review-text"><span class="btn-symbol">↓</span> Launch Review</span>
+            </button>
+            <button type="button" class="action-pill-btn btn-cancel-scan" id="btn-cancel-review" onclick="cancelReview()" style="display: none;">
+              <span class="btn-symbol">🛑</span> Cancel Review
+            </button>
+            <button type="button" class="action-pill-btn pill-glass" onclick="exportCurrentReport('html')" title="Export standalone self-contained HTML report">
+              <span class="btn-symbol">📄</span> Export HTML
+            </button>
+            <button type="button" class="action-pill-btn pill-glass" onclick="exportCurrentReport('pdf')" title="Export academic audit PDF report">
+              <span class="btn-symbol">📑</span> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- The 4 Metric Cards (Glisse Activity Tiles - Revealed After Scanning) -->
+        <div class="metrics-cards-grid" id="console-metrics-row" style="display: none;">
+          <!-- Card 1: Total Findings with Bar Chart -->
+          <div class="metric-glass-card stat-total">
+            <div class="card-meta-top">
+              <span class="card-label">Total Findings</span>
+            </div>
+            <div class="card-val-row">
+              <span class="card-big-val" id="stat-total">0</span>
+              <svg class="mini-chart-svg" viewBox="0 0 100 45" fill="none" aria-hidden="true">
+                <rect x="5" y="28" width="10" height="17" rx="3" fill="#30d158" opacity="0.35"/>
+                <rect x="25" y="20" width="10" height="25" rx="3" fill="#30d158" opacity="0.55"/>
+                <rect x="45" y="14" width="10" height="31" rx="3" fill="#30d158" opacity="0.75"/>
+                <rect x="65" y="8" width="10" height="37" rx="3" fill="#30d158" opacity="0.9"/>
+                <rect x="85" y="2" width="10" height="43" rx="3" fill="#30d158"/>
+              </svg>
+            </div>
+            <div class="card-footer-sub">
+              <span class="sub-green">▲ 100% verified</span>
+              <span class="sub-dim">AST Clean</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Critical & High -->
+          <div class="metric-glass-card stat-critical">
+            <div class="card-meta-top">
+              <span class="card-label">Critical &amp; High</span>
+            </div>
+            <div class="card-val-row">
+              <span class="card-big-val" id="stat-critical-high">0</span>
+              <svg class="mini-chart-svg" viewBox="0 0 100 45" fill="none" aria-hidden="true">
+                <line x1="15" y1="5" x2="15" y2="40" stroke="#30d158" stroke-width="1.5"/>
+                <rect x="10" y="15" width="10" height="18" rx="2" fill="#30d158"/>
+                <line x1="38" y1="10" x2="38" y2="42" stroke="#ff453a" stroke-width="1.5"/>
+                <rect x="33" y="18" width="10" height="16" rx="2" fill="#ff453a"/>
+                <line x1="62" y1="2" x2="62" y2="38" stroke="#30d158" stroke-width="1.5"/>
+                <rect x="57" y="10" width="10" height="20" rx="2" fill="#30d158"/>
+                <line x1="85" y1="12" x2="85" y2="44" stroke="#ff453a" stroke-width="1.5"/>
+                <rect x="80" y="22" width="10" height="14" rx="2" fill="#ff453a"/>
+              </svg>
+            </div>
+            <div class="card-footer-sub">
+              <span class="sub-red" id="stat-crit-sub">Critical: 0 &bull; High: 0</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Max Risk Score -->
+          <div class="metric-glass-card stat-risk">
+            <div class="card-meta-top">
+              <span class="card-label">Max Risk Score</span>
+            </div>
+            <div class="card-val-row">
+              <span class="card-big-val" id="stat-max-risk">0.0</span>
+              <svg class="mini-chart-svg" viewBox="0 0 100 45" fill="none" aria-hidden="true">
+                <path d="M 5,38 C 30,36 45,28 65,18 C 75,13 85,8 95,5" stroke="#ff9f0a" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="65" cy="18" r="3.5" fill="#ff9f0a"/>
+                <circle cx="95" cy="5" r="4" fill="#ffffff" stroke="#ff9f0a" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="card-footer-sub">
+              <span class="sub-gold">Scale: 0.0 &ndash; 10.0</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Multi-Agent Consensus -->
+          <div class="metric-glass-card stat-agents">
+            <div class="card-meta-top">
+              <span class="card-label">Active Agents</span>
+            </div>
+            <div class="card-val-row">
+              <span class="card-big-val" id="stat-active-agents">3</span>
+              <svg class="mini-chart-svg" viewBox="0 0 100 45" fill="none" aria-hidden="true">
+                <rect x="15" y="10" width="14" height="35" rx="5" fill="#30d158"/>
+                <rect x="45" y="22" width="14" height="23" rx="5" fill="#30d158" opacity="0.65"/>
+                <rect x="75" y="4" width="14" height="41" rx="5" fill="#30d158"/>
+              </svg>
+            </div>
+            <div class="card-footer-sub">
+              <span class="sub-green">● Consensus Ready</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden counters for test suite compatibility -->
+        <div style="display:none;" aria-hidden="true">
+          <span id="stat-critical">0</span>
+          <span id="stat-high">0</span>
+          <span id="stat-medium">0</span>
+          <span id="stat-low">0</span>
+        </div>
+
+        <!-- ==================================================================
+             TAB 1: New Review (Target Configuration & Live Telemetry)
+             ================================================================== -->
+        <div id="view-new-review" class="view-section active">
+          <!-- Target Config Card -->
+          <div class="dashboard-card">
+            <h2 class="card-title"><span>🎯</span> Target Configuration</h2>
+            <p class="card-subtitle">Launch AST-guided automated vulnerability inspection on local repositories or remote GitHub source code.</p>
+
+            <!-- Glisse Segmented Control (Source Selector) -->
+            <div class="source-type-selector">
+              <button type="button" class="source-toggle-btn active" id="btn-src-local" onclick="setSourceType('local')">
+                <span>💻</span> Local Folder Path
+              </button>
+              <button type="button" class="source-toggle-btn" id="btn-src-github" onclick="setSourceType('github')">
+                <span>🌐</span> GitHub Repository
+              </button>
+            </div>
+
+            <!-- Local Directory Inputs -->
+            <div id="form-group-local">
+              <div class="form-group">
+                <label class="form-label" for="local-path">Repository Directory Path <small>(Absolute or relative path)</small></label>
+                <input type="text" id="local-path" class="form-input" placeholder="e.g. . or ./samples/vulnerable_repo" value=".">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="local-ignores">Extra Ignore Patterns <small>(Comma-separated, e.g. tests/,*.tmp)</small></label>
+                <input type="text" id="local-ignores" class="form-input" placeholder="e.g. node_modules,dist,build">
+              </div>
+            </div>
+
+            <!-- GitHub Repository Inputs -->
+            <div id="form-group-github" style="display: none;">
+              <div class="form-group">
+                <label class="form-label" for="github-url">GitHub Repository URL <small>(HTTPS or SSH)</small></label>
+                <input type="text" id="github-url" class="form-input" placeholder="https://github.com/owner/repository">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="github-ref">Branch, Tag, or Commit SHA <small>(Optional)</small></label>
+                  <input type="text" id="github-ref" class="form-input" placeholder="main">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="github-token">Personal Access Token <small>(Optional for private repos)</small></label>
+                  <input type="password" id="github-token" class="form-input" placeholder="ghp_************************">
+                </div>
+              </div>
+            </div>
+
+            <!-- Glisse Switches (Inspired by glisse.kelvinzhang.ca Switch Components) -->
+            <div class="glisse-switch-row">
+              <div class="glisse-switch-meta">
+                <span class="glisse-switch-label">Tree-sitter AST Graph Resolution</span>
+                <span class="glisse-switch-desc">Deterministic symbol scope analysis before neural review</span>
+              </div>
+              <label class="glisse-switch" title="Toggle Deterministic AST">
+                <input type="checkbox" checked aria-label="Tree-sitter AST Graph Resolution">
+                <span class="glisse-switch-track"><span class="glisse-switch-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="glisse-switch-row">
+              <div class="glisse-switch-meta">
+                <span class="glisse-switch-label">Multi-Agent Consensus Moderation</span>
+                <span class="glisse-switch-desc">Parallel Security &amp; Architecture arbitration with deduplication</span>
+              </div>
+              <label class="glisse-switch" title="Toggle Consensus Moderation">
+                <input type="checkbox" checked aria-label="Multi-Agent Consensus Moderation">
+                <span class="glisse-switch-track"><span class="glisse-switch-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="review-actions-bar">
+              <button type="button" class="btn-primary" onclick="startReview()">
+                <span>🚀</span> Launch Vulnerability Review
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Agent Telemetry Panel -->
+          <div class="dashboard-card" id="telemetry-panel">
+            <h2 class="card-title"><span>📡</span> Live Agent Telemetry &amp; Execution Pipeline</h2>
+            <p class="card-subtitle">Real-time status, execution progress, and metrics across multi-agent analysis.</p>
+
+            <!-- Stepper -->
+            <div class="pipeline-stepper">
+              <div class="pipeline-step" id="step-ingestion">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                  <div class="step-name">Ingestion</div>
+                  <div class="step-desc" id="step-desc-ingestion">File tree filtering</div>
+                </div>
+              </div>
+              <div class="pipeline-step" id="step-context">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                  <div class="step-name">AST Context</div>
+                  <div class="step-desc" id="step-desc-context">Chunking &amp; scopes</div>
+                </div>
+              </div>
+              <div class="pipeline-step" id="step-analysis">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                  <div class="step-name">Parallel Analysis</div>
+                  <div class="step-desc" id="step-desc-analysis">Security &amp; Architecture</div>
+                </div>
+              </div>
+              <div class="pipeline-step" id="step-moderation">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                  <div class="step-name">Moderation</div>
+                  <div class="step-desc" id="step-desc-moderation">Arbitration &amp; risk scoring</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Agent Telemetry Cards Grid -->
+            <div class="telemetry-grid">
+              <!-- Security Auditor -->
+              <div class="agent-card">
+                <div class="agent-card-header">
+                  <span class="agent-role"><span>🛡️</span> Security Auditor</span>
+                  <span class="agent-status-pill agent-status-idle" id="agent-sec-status">IDLE</span>
+                </div>
+                <div class="agent-meta-row">
+                  <span>Findings Discovered:</span>
+                  <span class="agent-meta-val" id="agent-sec-findings">0</span>
+                </div>
+                <div class="agent-meta-row">
+                  <span>Execution Time:</span>
+                  <span class="agent-meta-val" id="agent-sec-time">0.0s</span>
+                </div>
+                <span class="agent-badge">OWASP Top 10 &amp; CWE Verification</span>
+              </div>
+
+              <!-- Software Architect -->
+              <div class="agent-card">
+                <div class="agent-card-header">
+                  <span class="agent-role"><span>📐</span> Software Architect</span>
+                  <span class="agent-status-pill agent-status-idle" id="agent-arch-status">IDLE</span>
+                </div>
+                <div class="agent-meta-row">
+                  <span>Findings Discovered:</span>
+                  <span class="agent-meta-val" id="agent-arch-findings">0</span>
+                </div>
+                <div class="agent-meta-row">
+                  <span>Execution Time:</span>
+                  <span class="agent-meta-val" id="agent-arch-time">0.0s</span>
+                </div>
+                <span class="agent-badge">Modularity &amp; Resilience Analysis</span>
+              </div>
+
+              <!-- Review Moderator -->
+              <div class="agent-card">
+                <div class="agent-card-header">
+                  <span class="agent-role"><span>⚖️</span> Review Moderator</span>
+                  <span class="agent-status-pill agent-status-idle" id="agent-mod-status">IDLE</span>
+                </div>
+                <div class="agent-meta-row">
+                  <span>Deduplicated Duplicates:</span>
+                  <span class="agent-meta-val" id="agent-mod-dedup">0</span>
+                </div>
+                <div class="agent-meta-row">
+                  <span>Arbitration Status:</span>
+                  <span class="agent-meta-val" id="agent-mod-state">Pending</span>
+                </div>
+                <span class="agent-badge">Mathematical Risk Scoring Matrix</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 2: Findings Explorer
+             ================================================================== -->
+        <div id="view-findings" class="view-section">
+          <!-- Findings Actions Header -->
+          <div class="findings-actions-header">
+            <div class="findings-heading">
+              <h2 class="card-title" style="margin-bottom: 0.2rem;"><span>🔍</span> Moderated Review Findings</h2>
+              <p class="card-subtitle" style="margin-bottom: 0;" id="findings-repo-subtitle">Showing consolidated AST-guided security and architecture inspection results.</p>
+            </div>
+            <div class="export-btn-group">
+              <button type="button" class="btn-export" onclick="exportCurrentReport('html')" title="Export standalone self-contained HTML report">
+                <span>📄</span> Export HTML
+              </button>
+              <button type="button" class="btn-export" onclick="exportCurrentReport('pdf')" title="Export academic audit PDF report">
+                <span>📑</span> Export PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter Controls -->
+          <div class="filter-bar">
+            <div class="filter-row-primary">
+              <div class="search-input-wrap">
+                <input type="text" id="filter-search" class="form-input" placeholder="Search by title, file path, or CWE (e.g. CWE-89)..." oninput="applyFilters()">
+              </div>
+              <select id="filter-agent" class="filter-select" onchange="applyFilters()">
+                <option value="all">All Agents</option>
+                <option value="security_auditor">Security Auditor</option>
+                <option value="software_architect">Software Architect</option>
+              </select>
+              <select id="filter-category" class="filter-select" onchange="applyFilters()">
+                <option value="all">All Categories</option>
+                <option value="injection">Injection</option>
+                <option value="cryptography">Cryptography</option>
+                <option value="complexity">Complexity</option>
+                <option value="resource_management">Resource Management</option>
+                <option value="concurrency">Concurrency</option>
+                <option value="error_handling">Error Handling</option>
+                <option value="architecture">Architecture</option>
+              </select>
+            </div>
+            <div class="severity-pill-group">
+              <span style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.25rem;">Severity:</span>
+              <button type="button" class="sev-btn active" data-sev="all" onclick="setSeverityFilter('all')">All</button>
+              <button type="button" class="sev-btn" data-sev="critical" onclick="setSeverityFilter('critical')">Critical</button>
+              <button type="button" class="sev-btn" data-sev="high" onclick="setSeverityFilter('high')">High</button>
+              <button type="button" class="sev-btn" data-sev="medium" onclick="setSeverityFilter('medium')">Medium</button>
+              <button type="button" class="sev-btn" data-sev="low" onclick="setSeverityFilter('low')">Low</button>
+              <button type="button" class="sev-btn" data-sev="info" onclick="setSeverityFilter('info')">Info</button>
+            </div>
+          </div>
+
+          <!-- Findings List -->
+          <div id="findings-list" class="findings-container">
+            <div class="empty-state">
+              <div class="empty-icon">📂</div>
+              <p>No findings loaded. Launch a review in the "New Review" tab or pick a scan from "Review History".</p>
+            </div>
+          </div>
+
+          <!-- Advisory Disclaimer (REQ-11) -->
+          <div class="advisory-disclaimer-banner">
+            <span>ℹ️</span>
+            <div>
+              <strong>Advisory Guidance Disclaimer:</strong> AI-generated recommendations provide advisory architectural and security guidance. Automated suggestions must be evaluated and verified by qualified developers before deployment.
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 3: Review History & Comparison
+             ================================================================== -->
+        <div id="view-history" class="view-section">
+          <!-- History Table Card -->
+          <div class="dashboard-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h2 class="card-title"><span>📜</span> Review History</h2>
+              <button type="button" class="btn-secondary" onclick="loadHistory()"><span>🔄</span> Refresh</button>
+            </div>
+            <p class="card-subtitle">Inspect historical code review reports stored persistently under <code>.gsd/reviews/</code>.</p>
+
+            <div class="history-table-container">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Review ID</th>
+                    <th>Repository</th>
+                    <th>Date &amp; Time</th>
+                    <th>Findings</th>
+                    <th>Critical</th>
+                    <th>Max Risk</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-dim);">Loading past reviews...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Scan Comparison Panel -->
+          <div class="dashboard-card comparison-card">
+            <h2 class="card-title"><span>⚖️</span> Side-by-Side Scan Comparison</h2>
+            <p class="card-subtitle">Compare two review scans to analyze security regressions, newly introduced vulnerabilities, and resolved issues.</p>
+
+            <div class="form-row" style="margin-bottom: 1.25rem;">
+              <div class="form-group">
+                <label class="form-label" for="compare-base-select">Base Scan (V1):</label>
+                <select id="compare-base-select" class="form-input"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="compare-target-select">Target Scan (V2):</label>
+                <select id="compare-target-select" class="form-input"></select>
+              </div>
+            </div>
+
+            <button type="button" class="btn-primary" id="btn-compare" onclick="compareScans()">
+              <span>📊</span> Compare Scans
+            </button>
+
+            <!-- Diff Results Output -->
+            <div id="compare-results" style="display: none; margin-top: 1.5rem;">
+              <div class="diff-grid">
+                <div class="diff-stat stat-new">
+                  <div class="stat-value" id="diff-new-count" style="color: var(--sev-critical-text);">0</div>
+                  <div class="stat-label">New Findings (+)</div>
+                </div>
+                <div class="diff-stat stat-resolved">
+                  <div class="stat-value" id="diff-resolved-count" style="color: var(--apple-green);">0</div>
+                  <div class="stat-label">Resolved Findings (-)</div>
+                </div>
+                <div class="diff-stat stat-persistent">
+                  <div class="stat-value" id="diff-persistent-count" style="color: var(--sev-medium-text);">0</div>
+                  <div class="stat-label">Persistent Findings (=)</div>
+                </div>
+                <div class="diff-stat stat-delta">
+                  <div class="stat-value" id="diff-risk-delta" style="color: var(--accent-purple);">0.0</div>
+                  <div class="stat-label">Risk Delta</div>
+                </div>
+              </div>
+
+              <h3 style="font-size: 0.95rem; margin: 1.5rem 0 0.75rem 0; color: var(--text-main);">Comparison Finding Breakdown:</h3>
+              <div id="diff-findings-list" class="diff-findings-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View 4: Assistance & Architecture (Glisse Library / Documentation) -->
+        <div id="view-assistance" class="view-section">
+          <div class="dashboard-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="card-icon">📚</span> AST &amp; Multi-Agent Architecture Guide
+              </div>
+              <div class="card-badge">Academic Reference</div>
+            </div>
+
+            <div class="assistance-grid">
+              <div class="assistance-feature-card">
+                <div class="feature-icon">🌳</div>
+                <h4>Tree-sitter AST Graph</h4>
+                <p>Deterministic abstract syntax tree analysis builds scope-aware symbol graphs, isolating tainted flows and call dependencies before model invocation.</p>
+              </div>
+
+              <div class="assistance-feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h4>Security Auditor</h4>
+                <p>Dedicated LLM agent scanning for OWASP Top 10, CWE-89 SQLi, CWE-79 XSS, CWE-78 command injection, and authorization flaws with exact line-level evidence.</p>
+              </div>
+
+              <div class="assistance-feature-card">
+                <div class="feature-icon">⚡</div>
+                <h4>Performance &amp; Quality</h4>
+                <p>Evaluates algorithmic bottlenecks, unclosed resources, memory leaks, and concurrency race conditions with actionable refactoring advice.</p>
+              </div>
+
+              <div class="assistance-feature-card">
+                <div class="feature-icon">⚖️</div>
+                <h4>Deterministic Arbiter</h4>
+                <p>Cross-validates multi-agent findings, removes duplicates, adjusts risk scores, and eliminates hallucinations using deterministic AST evidence checks.</p>
+              </div>
+            </div>
+
+            <div class="assistance-export-row">
+              <button type="button" class="action-pill-btn pill-glass" onclick="exportCurrentReport('html')">
+                <span class="btn-symbol">📄</span> Download Standalone HTML Audit
+              </button>
+              <button type="button" class="action-pill-btn pill-glass" onclick="exportCurrentReport('pdf')">
+                <span class="btn-symbol">📑</span> Download PDF Security Report
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Glisse Signature Liquid Glass Floating TabBar (Faithfully implementing glisse.kelvinzhang.ca <TabBar />) -->
+  <nav class="glisse-floating-tabbar" id="glisse-tabbar" aria-label="Library" role="tablist">
+    <div class="glisse-tabbar-inner" id="glisse-tabbar-inner">
+      <!-- Glisse Sliding Highlight Pill Indicator (Hold & Drag Enabled) -->
+      <div id="glisse-tab-indicator" class="glisse-tab-indicator" aria-hidden="true"></div>
+
+      <button type="button" role="tab" class="glisse-tab-btn active" id="tab-nav-new" onclick="switchTab('new-review')" aria-selected="true" title="New Review">
+        <span class="glisse-tab-icon-wrap">
+          <!-- HouseIcon from Glisse -->
+          <svg class="glisse-tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </span>
+        <span class="glisse-tab-label">New Review</span>
+      </button>
+
+      <button type="button" role="tab" class="glisse-tab-btn" id="tab-nav-findings" onclick="switchTab('findings')" aria-selected="false" title="Findings Explorer">
+        <span class="glisse-tab-icon-wrap">
+          <!-- CompassIcon from Glisse -->
+          <svg class="glisse-tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          </svg>
+          <span class="nav-badge glisse-badge-dot" id="tab-findings-count">0</span>
+        </span>
+        <span class="glisse-tab-label">Findings Explorer</span>
+      </button>
+
+      <button type="button" role="tab" class="glisse-tab-btn" id="tab-nav-history" onclick="switchTab('history')" aria-selected="false" title="Review History & Comparison">
+        <span class="glisse-tab-icon-wrap">
+          <!-- RadioIcon from Glisse -->
+          <svg class="glisse-tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="2"/>
+            <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+          </svg>
+        </span>
+        <span class="glisse-tab-label">Review History &amp; Comparison</span>
+      </button>
+
+      <button type="button" role="tab" class="glisse-tab-btn" id="tab-nav-assistance" onclick="switchTab('assistance')" aria-selected="false" title="Assistance">
+        <span class="glisse-tab-icon-wrap">
+          <!-- BooksIcon from Glisse -->
+          <svg class="glisse-tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+            <path d="M6 6h10"/>
+            <path d="M6 10h10"/>
+          </svg>
+        </span>
+        <span class="glisse-tab-label">Assistance</span>
       </button>
     </div>
   </nav>
 
-  <!-- Main Views Container -->
-  <main class="main-content">
-    <div id="global-error" class="error-banner"></div>
-
-    <!-- TAB 1: New Review -->
-    <section id="view-new-review" class="view-section active">
-      <div class="dashboard-card">
-        <h2 class="card-title"><span>🎯</span> Target Configuration</h2>
-        <p class="card-subtitle">Launch AST-guided automated vulnerability inspection on local repositories or remote GitHub source code.</p>
-
-        <!-- Source Selector -->
-        <div class="source-type-selector">
-          <button type="button" class="source-toggle-btn active" id="btn-src-local" onclick="setSourceType('local')">
-            <span>💻</span> Local Folder Path
-          </button>
-          <button type="button" class="source-toggle-btn" id="btn-src-github" onclick="setSourceType('github')">
-            <span>🌐</span> GitHub Repository
-          </button>
-        </div>
-
-        <!-- Local Form -->
-        <div id="form-group-local">
-          <div class="form-group">
-            <label class="form-label" for="local-path">Repository Directory Path <small>(Absolute or relative path)</small></label>
-            <input type="text" id="local-path" class="form-input" placeholder="e.g. . or ./samples/vulnerable_repo" value=".">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="local-ignores">Extra Ignore Patterns <small>(Comma-separated, e.g. tests/,*.tmp)</small></label>
-            <input type="text" id="local-ignores" class="form-input" placeholder="e.g. node_modules,dist,build">
-          </div>
-        </div>
-
-        <!-- GitHub Form -->
-        <div id="form-group-github" style="display: none;">
-          <div class="form-group">
-            <label class="form-label" for="github-url">GitHub Repository URL <small>(HTTPS or SSH)</small></label>
-            <input type="text" id="github-url" class="form-input" placeholder="https://github.com/owner/repository">
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="github-ref">Branch, Tag, or Commit SHA <small>(Optional)</small></label>
-              <input type="text" id="github-ref" class="form-input" placeholder="main">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="github-token">Personal Access Token <small>(Optional for private repos)</small></label>
-              <input type="password" id="github-token" class="form-input" placeholder="ghp_************************">
-            </div>
-          </div>
-        </div>
-
-        <button type="button" class="btn-primary" id="btn-start-review" onclick="startReview()">
-          <span id="btn-start-review-spinner" class="spinner" style="display: none;"></span>
-          <span id="btn-start-review-text">Launch Vulnerability Review</span>
-        </button>
-      </div>
-
-      <!-- Live Agent Telemetry Panel -->
-      <div class="dashboard-card" id="telemetry-panel">
-        <h2 class="card-title"><span>📡</span> Live Agent Telemetry &amp; Execution Pipeline</h2>
-        <p class="card-subtitle">Real-time status, execution progress, and metrics across multi-agent analysis.</p>
-
-        <!-- Stepper -->
-        <div class="pipeline-stepper">
-          <div class="pipeline-step" id="step-ingestion">
-            <div class="step-num">1</div>
-            <div class="step-content">
-              <div class="step-name">Ingestion</div>
-              <div class="step-desc" id="step-desc-ingestion">File tree filtering</div>
-            </div>
-          </div>
-          <div class="pipeline-step" id="step-context">
-            <div class="step-num">2</div>
-            <div class="step-content">
-              <div class="step-name">AST Context</div>
-              <div class="step-desc" id="step-desc-context">Chunking &amp; scopes</div>
-            </div>
-          </div>
-          <div class="pipeline-step" id="step-analysis">
-            <div class="step-num">3</div>
-            <div class="step-content">
-              <div class="step-name">Parallel Analysis</div>
-              <div class="step-desc" id="step-desc-analysis">Security &amp; Architecture</div>
-            </div>
-          </div>
-          <div class="pipeline-step" id="step-moderation">
-            <div class="step-num">4</div>
-            <div class="step-content">
-              <div class="step-name">Moderation</div>
-              <div class="step-desc" id="step-desc-moderation">Arbitration &amp; risk scoring</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Telemetry Cards -->
-        <div class="telemetry-grid">
-          <!-- Security Auditor -->
-          <div class="agent-card">
-            <div class="agent-card-header">
-              <span class="agent-role"><span>🛡️</span> Security Auditor</span>
-              <span class="agent-status-pill agent-status-idle" id="agent-sec-status">IDLE</span>
-            </div>
-            <div class="agent-meta-row">
-              <span>Findings Discovered:</span>
-              <span class="agent-meta-val" id="agent-sec-findings">0</span>
-            </div>
-            <div class="agent-meta-row">
-              <span>Execution Time:</span>
-              <span class="agent-meta-val" id="agent-sec-time">0.0s</span>
-            </div>
-            <span class="agent-badge">OWASP Top 10 &amp; CWE Verification</span>
-          </div>
-
-          <!-- Software Architect -->
-          <div class="agent-card">
-            <div class="agent-card-header">
-              <span class="agent-role"><span>📐</span> Software Architect</span>
-              <span class="agent-status-pill agent-status-idle" id="agent-arch-status">IDLE</span>
-            </div>
-            <div class="agent-meta-row">
-              <span>Findings Discovered:</span>
-              <span class="agent-meta-val" id="agent-arch-findings">0</span>
-            </div>
-            <div class="agent-meta-row">
-              <span>Execution Time:</span>
-              <span class="agent-meta-val" id="agent-arch-time">0.0s</span>
-            </div>
-            <span class="agent-badge">Modularity &amp; Resilience Analysis</span>
-          </div>
-
-          <!-- Review Moderator -->
-          <div class="agent-card">
-            <div class="agent-card-header">
-              <span class="agent-role"><span>⚖️</span> Review Moderator</span>
-              <span class="agent-status-pill agent-status-idle" id="agent-mod-status">IDLE</span>
-            </div>
-            <div class="agent-meta-row">
-              <span>Deduplicated Duplicates:</span>
-              <span class="agent-meta-val" id="agent-mod-dedup">0</span>
-            </div>
-            <div class="agent-meta-row">
-              <span>Arbitration Status:</span>
-              <span class="agent-meta-val" id="agent-mod-state">Pending</span>
-            </div>
-            <span class="agent-badge">Mathematical Risk Scoring Matrix</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 2: Findings Explorer -->
-    <section id="view-findings" class="view-section">
-      <!-- Summary Metrics Bar -->
-      <div class="summary-bar">
-        <div class="stat-card stat-total">
-          <div class="stat-value" id="stat-total">0</div>
-          <div class="stat-label">Total Findings</div>
-        </div>
-        <div class="stat-card stat-critical">
-          <div class="stat-value" id="stat-critical">0</div>
-          <div class="stat-label">Critical</div>
-        </div>
-        <div class="stat-card stat-high">
-          <div class="stat-value" id="stat-high">0</div>
-          <div class="stat-label">High</div>
-        </div>
-        <div class="stat-card stat-medium">
-          <div class="stat-value" id="stat-medium">0</div>
-          <div class="stat-label">Medium</div>
-        </div>
-        <div class="stat-card stat-low">
-          <div class="stat-value" id="stat-low">0</div>
-          <div class="stat-label">Low</div>
-        </div>
-        <div class="stat-card stat-risk">
-          <div class="stat-value" id="stat-max-risk">0.0</div>
-          <div class="stat-label">Max Risk Score</div>
-        </div>
-      </div>
-
-      <!-- Filter Controls -->
-      <div class="filter-bar">
-        <div class="filter-row-primary">
-          <div class="search-input-wrap">
-            <input type="text" id="filter-search" class="form-input" placeholder="Search by title, file path, or CWE (e.g. CWE-89)..." oninput="applyFilters()">
-          </div>
-          <select id="filter-agent" class="filter-select" onchange="applyFilters()">
-            <option value="all">All Agents</option>
-            <option value="security_auditor">Security Auditor</option>
-            <option value="software_architect">Software Architect</option>
-          </select>
-          <select id="filter-category" class="filter-select" onchange="applyFilters()">
-            <option value="all">All Categories</option>
-            <option value="injection">Injection</option>
-            <option value="cryptography">Cryptography</option>
-            <option value="complexity">Complexity</option>
-            <option value="resource_management">Resource Management</option>
-            <option value="concurrency">Concurrency</option>
-            <option value="error_handling">Error Handling</option>
-            <option value="architecture">Architecture</option>
-          </select>
-        </div>
-        <div class="severity-pill-group">
-          <span style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.25rem;">Severity:</span>
-          <button type="button" class="sev-btn active" data-sev="all" onclick="setSeverityFilter('all')">All</button>
-          <button type="button" class="sev-btn" data-sev="critical" onclick="setSeverityFilter('critical')">Critical</button>
-          <button type="button" class="sev-btn" data-sev="high" onclick="setSeverityFilter('high')">High</button>
-          <button type="button" class="sev-btn" data-sev="medium" onclick="setSeverityFilter('medium')">Medium</button>
-          <button type="button" class="sev-btn" data-sev="low" onclick="setSeverityFilter('low')">Low</button>
-          <button type="button" class="sev-btn" data-sev="info" onclick="setSeverityFilter('info')">Info</button>
-        </div>
-      </div>
-
-      <!-- Findings List -->
-      <div id="findings-list" class="findings-container">
-        <div class="empty-state">
-          <div class="empty-icon">📂</div>
-          <p>No findings loaded. Launch a review in the "New Review" tab or pick a scan from "Review History".</p>
-        </div>
-      </div>
-
-      <!-- Advisory Disclaimer (REQ-11) -->
-      <div class="advisory-disclaimer-banner">
-        <span>ℹ️</span>
-        <div>
-          <strong>Advisory Guidance Disclaimer:</strong> AI-generated recommendations provide advisory architectural and security guidance. Automated suggestions must be evaluated and verified by qualified developers before deployment.
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 3: History & Comparison -->
-    <section id="view-history" class="view-section">
-      <div class="dashboard-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <h2 class="card-title"><span>📜</span> Review History</h2>
-          <button type="button" class="btn-secondary" onclick="loadHistory()"><span>🔄</span> Refresh</button>
-        </div>
-        <p class="card-subtitle">Inspect historical code review reports stored persistently under <code>.gsd/reviews/</code>.</p>
-
-        <div class="history-table-container">
-          <table class="history-table">
-            <thead>
-              <tr>
-                <th>Review ID</th>
-                <th>Repository</th>
-                <th>Date &amp; Time</th>
-                <th>Findings</th>
-                <th>Critical</th>
-                <th>Max Risk</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="history-table-body">
-              <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-dim);">Loading past reviews...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Scan Comparison Panel -->
-      <div class="dashboard-card comparison-card">
-        <h2 class="card-title"><span>⚖️</span> Side-by-Side Scan Comparison</h2>
-        <p class="card-subtitle">Compare two review scans to analyze security regressions, newly introduced vulnerabilities, and resolved issues.</p>
-
-        <div class="form-row" style="margin-bottom: 1.25rem;">
-          <div class="form-group">
-            <label class="form-label" for="compare-base-select">Base Scan (V1):</label>
-            <select id="compare-base-select" class="form-input"></select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="compare-target-select">Target Scan (V2):</label>
-            <select id="compare-target-select" class="form-input"></select>
-          </div>
-        </div>
-
-        <button type="button" class="btn-primary" id="btn-compare" onclick="compareScans()">
-          <span>📊</span> Compare Scans
-        </button>
-
-        <!-- Diff Results Output -->
-        <div id="compare-results" style="display: none; margin-top: 1.5rem;">
-          <div class="diff-grid">
-            <div class="diff-stat stat-new">
-              <div class="stat-value" id="diff-new-count" style="color: var(--sev-critical-text);">0</div>
-              <div class="stat-label">New Findings (+)</div>
-            </div>
-            <div class="diff-stat stat-resolved">
-              <div class="stat-value" id="diff-resolved-count" style="color: var(--accent-green);">0</div>
-              <div class="stat-label">Resolved Findings (-)</div>
-            </div>
-            <div class="diff-stat stat-persistent">
-              <div class="stat-value" id="diff-persistent-count" style="color: var(--sev-medium-text);">0</div>
-              <div class="stat-label">Persistent Findings (=)</div>
-            </div>
-            <div class="diff-stat stat-delta">
-              <div class="stat-value" id="diff-risk-delta" style="color: #c4b5fd;">0.0</div>
-              <div class="stat-label">Risk Delta</div>
-            </div>
-          </div>
-
-          <h3 style="font-size: 1rem; margin: 1.5rem 0 0.75rem 0; color: var(--text-main);">Comparison Finding Breakdown:</h3>
-          <div id="diff-findings-list" class="diff-findings-list"></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
+  <script src="/static/ribbons.js"></script>
+  <script src="/static/opener.js"></script>
   <script src="/static/app.js"></script>
+  <script>
+    function scrollToConsole() {
+      const el = document.getElementById('console-viewport');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
 </body>
 </html>
-

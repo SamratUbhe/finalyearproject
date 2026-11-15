@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     settings = get_settings()
     print("=" * 60)
-    print(" Automated Code Vulnerability Reviewer")
+    print(" ⚡ LOKI: Automated Code Vulnerability Reviewer")
     print(f" Dashboard URL: http://{settings.host}:{settings.port}/dashboard")
     print(f" API Docs:      http://{settings.host}:{settings.port}/docs")
     print("=" * 60)

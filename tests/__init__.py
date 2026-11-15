@@ -39,7 +39,19 @@ class SandboxResponse:
         return self._data
 
     @property
+    def content(self):
+        if hasattr(self._data, "body"):
+            b = self._data.body
+            return b if isinstance(b, bytes) else str(b).encode("utf-8")
+        if isinstance(self._data, bytes):
+            return self._data
+        return self.text.encode("utf-8")
+
+    @property
     def text(self):
+        if hasattr(self._data, "body"):
+            b = self._data.body
+            return b.decode("utf-8") if isinstance(b, bytes) else str(b)
         if hasattr(self._data, "path"):
             try:
                 with open(self._data.path, "r", encoding="utf-8") as f:

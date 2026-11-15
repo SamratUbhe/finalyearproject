@@ -1,0 +1,377 @@
+{
+  "review_id": "rev-f848c24e863d",
+  "repo_id": "7945cffb502b",
+  "created_at": "2026-11-07T17:20:07.374026+00:00",
+  "status": "completed",
+  "total_files_reviewed": 2,
+  "total_chunks_reviewed": 4,
+  "findings": [
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "OWASP A03:2021-Injection",
+        "cwe_id": "CWE-89",
+        "owasp_category": "A03:2021-Injection",
+        "title": "SQL Injection via f-string query construction",
+        "description": "The function constructs a SQL query by directly embedding unvalidated user input ('username' and 'password') using an f-string. This allows an attacker to manipulate the query structure, potentially bypassing authentication or extracting unauthorized data from the database.",
+        "severity": "CRITICAL",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 8,
+          "end_line": 14,
+          "code_snippet": "def login_user(username, password):\n    conn = sqlite3.connect(\"users.db\")\n    cursor = conn.cursor()\n\n    # DEMO VULNERABILITY: Raw SQL Injection (CWE-89)\n    query = f\"SELECT * FROM accounts WHERE username = '{username}' AND password = '{password}'\"\n    cursor.execute(query)\n    user = cursor.fetchone()"
+        },
+        "remediation": {
+          "explanation": "Use parameterized queries instead of string formatting to ensure that user-supplied input is treated strictly as data rather than executable code.",
+          "recommended_fix": "query = \"SELECT * FROM accounts WHERE username = ? AND password = ?\"\ncursor.execute(query, (username, password))",
+          "references": [
+            "https://cwe.mitre.org/data/definitions/89.html",
+            "https://owasp.org/Top10/A03_2021-Injection/"
+          ]
+        },
+        "raw_risk_score": 10.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 10.0,
+      "priority_rank": 1,
+      "is_deduplicated": false,
+      "sources": [
+        "SECURITY_AUDITOR"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "OWASP A03:2021-Injection",
+        "cwe_id": "CWE-78",
+        "owasp_category": "A03:2021-Injection",
+        "title": "OS Command Injection via os.system",
+        "description": "The function execute_server_diag directly concatenates the user-supplied parameter 'target_host' into a system command executed via os.system. If an attacker supplies malicious input containing command separators (e.g., semicolons, ampersands, or pipes), arbitrary operating system commands can be executed with the privileges of the application.",
+        "severity": "CRITICAL",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 22,
+          "end_line": 24,
+          "code_snippet": "def execute_server_diag(target_host):\n    # DEMO VULNERABILITY: Command Injection (CWE-78)\n    os.system(\"ping -c 2 \" + target_host)"
+        },
+        "remediation": {
+          "explanation": "Avoid using os.system or shell=True with unvalidated user input. Instead, use the subprocess module with a list of arguments and shell=False, or validate the input against a strict whitelist (e.g., matching a valid IP address or hostname format).",
+          "recommended_fix": "import subprocess\n\ndef execute_server_diag(target_host):\n    # Use subprocess with a list of arguments and shell=False to prevent injection\n    subprocess.run([\"ping\", \"-c\", \"2\", target_host], check=True)",
+          "references": [
+            "https://cwe.mitre.org/data/definitions/78.html",
+            "https://owasp.org/Top10/A03_2021-Injection/"
+          ]
+        },
+        "raw_risk_score": 10.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 10.0,
+      "priority_rank": 2,
+      "is_deduplicated": true,
+      "sources": [
+        "SECURITY_AUDITOR",
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": "Security Auditor recommendation takes precedence over Software Architect simplification/refactoring."
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Code Quality / Complexity",
+        "cwe_id": "CWE-697",
+        "owasp_category": null,
+        "title": "High Cyclomatic Complexity and Deep Nesting",
+        "description": "The function handle_admin_action contains deeply nested conditional statements (Arrow Anti-Pattern), leading to high cyclomatic and cognitive complexity. This reduces readability and makes the codebase hard to maintain and test.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\admin.py",
+          "start_line": 3,
+          "end_line": 30,
+          "code_snippet": "def handle_admin_action(action, user_role, payload, db_session, email_service, audit_log):\n    # Nested conditionals violating single-responsibility principle\n    if user_role == \"admin\":\n        if action == \"delete_user\":\n            if \"target_id\" in payload:\n                if payload[\"target_id\"] > 0:\n                    db_session.execute(\"DELETE FROM users WHERE id = ?\", (payload[\"target_id\"],))\n                    email_service.send_alert(\"User deleted\")\n                    audit_log.record(\"delete\", payload[\"target_id\"])\n                    return True\n                else:\n                    return False\n            else:\n                return False\n        elif action == \"update_role\":\n            if \"target_id\" in payload and \"role\" in payload:\n                db_session.execute(\"UPDATE users SET role = ? WHERE id = ?\", (payload[\"role\"], payload[\"target_id\"]))\n                email_service.send_alert(\"Role updated\")\n                audit_log.record(\"role_change\", payload[\"target_id\"])\n                return True\n        elif action == \"export_data\":\n            # Unbuffered memory leak pattern\n            all_records = db_session.fetchall()\n            return all_records\n    elif user_role == \"moderator\":\n        if action == \"view_user\":\n            return db_session.execute(\"SELECT * FROM users WHERE id = ?\", (payload.get(\"target_id\"),))\n    return False"
+        },
+        "remediation": {
+          "explanation": "Refactoring using the Strategy Pattern or Command Pattern, or breaking down the function into smaller handler methods based on action and role, will drastically decrease cognitive complexity and improve separation of concerns.",
+          "recommended_fix": "Consider decomposing handle_admin_action into dedicated action handler functions and utilizing a dispatch dictionary to route requests based on user role and action.",
+          "references": [
+            "Clean Code: A Handbook of Agile Software Craftsmanship (Chapter 3: Functions)",
+            "Refactoring: Improving the Design of Existing Code (Replace Conditional with Polymorphism)"
+          ]
+        },
+        "raw_risk_score": 8.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 8.0,
+      "priority_rank": 3,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-002",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Coupling & Modularity",
+        "cwe_id": null,
+        "owasp_category": null,
+        "title": "Single Responsibility Principle (SRP) Violation - God Function",
+        "description": "The handle_admin_action function handles authorization checks, input validation, database mutations, email notifications, audit logging, and data exportation across multiple distinct user roles. It acts as a God function, leading to high coupling and low cohesion.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\admin.py",
+          "start_line": 3,
+          "end_line": 30,
+          "code_snippet": "def handle_admin_action(action, user_role, payload, db_session, email_service, audit_log):\n    # Nested conditionals violating single-responsibility principle\n    if user_role == \"admin\":\n        if action == \"delete_user\":\n..."
+        },
+        "remediation": {
+          "explanation": "Apply the Single Responsibility Principle by decoupling admin and moderator actions into separate classes or modules. Each action should encapsulate its own validation, execution, and side-effects.",
+          "recommended_fix": "Extract each action branch into a separate command class or standalone function. Implement role-based access control (RBAC) middleware or decorators to handle authorization separately from business logic.",
+          "references": [
+            "SOLID Principles of Object-Oriented and Agile Design",
+            "Single Responsibility Principle (Robert C. Martin)"
+          ]
+        },
+        "raw_risk_score": 8.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 8.0,
+      "priority_rank": 4,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "Secret and Credential Leakage",
+        "cwe_id": "CWE-798",
+        "owasp_category": "A07:2021-Identification and Authentication Failures",
+        "title": "Hardcoded JWT Secret Key",
+        "description": "The application uses a hardcoded secret key ('super_insecure_hardcoded_jwt_secret_9988') for signing and verifying JSON Web Tokens (JWT). Hardcoded secrets can be easily extracted by attackers from the source code or compiled binaries, allowing them to forge valid authentication tokens and impersonate any user.",
+        "severity": "HIGH",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 6,
+          "end_line": 6,
+          "code_snippet": "JWT_SECRET_KEY = \"super_insecure_hardcoded_jwt_secret_9988\""
+        },
+        "remediation": {
+          "explanation": "Store sensitive cryptographic keys and secrets in environment variables or a secure secrets management service rather than hardcoding them in the source code.",
+          "recommended_fix": "JWT_SECRET_KEY = os.environ.get(\"JWT_SECRET_KEY\")",
+          "references": [
+            "https://cwe.mitre.org/data/definitions/798.html",
+            "https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/"
+          ]
+        },
+        "raw_risk_score": 8.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 8.0,
+      "priority_rank": 5,
+      "is_deduplicated": true,
+      "sources": [
+        "SECURITY_AUDITOR",
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": "Security Auditor recommendation takes precedence over Software Architect simplification/refactoring."
+    },
+    {
+      "finding": {
+        "id": "SEC-001",
+        "agent_role": "SECURITY_AUDITOR",
+        "category": "OWASP A01:2021-Broken Access Control",
+        "cwe_id": "CWE-285",
+        "owasp_category": "A01:2021-Broken Access Control",
+        "title": "Insufficient Authorization for Moderator Role Actions",
+        "description": "The function checks if `user_role == \"moderator\"` and allows viewing any user via `target_id`. However, there is no validation to ensure that the moderator is authorized to view the specific requested user, potentially leading to an Insecure Direct Object Reference (IDOR) or unauthorized data access.",
+        "severity": "HIGH",
+        "confidence": "MEDIUM",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\admin.py",
+          "start_line": 25,
+          "end_line": 28,
+          "code_snippet": "    elif user_role == \"moderator\":\n        if action == \"view_user\":\n            return db_session.execute(\"SELECT * FROM users WHERE id = ?\", (payload.get(\"target_id\"),))"
+        },
+        "remediation": {
+          "explanation": "Implement proper authorization checks to ensure the user performing the action has permissions over the specific resource requested.",
+          "recommended_fix": "# Verify that the moderator has permission to access the target user's record\nif not moderator_has_access_to_user(current_user_id, payload.get(\"target_id\")):\n    return False",
+          "references": [
+            "https://cwe.mitre.org/data/definitions/285.html",
+            "https://owasp.org/Top10/A01_2021-Broken_Access_Control/"
+          ]
+        },
+        "raw_risk_score": 6.1,
+        "is_advisory_only": true
+      },
+      "risk_score": 6.1,
+      "priority_rank": 6,
+      "is_deduplicated": false,
+      "sources": [
+        "SECURITY_AUDITOR"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-001",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Resource Management",
+        "cwe_id": "CWE-404",
+        "owasp_category": "A04:2021 – Insecure Design",
+        "title": "Unclosed SQLite Database Connection",
+        "description": "The function opens a SQLite database connection using sqlite3.connect() but never explicitly closes the connection or cursor, nor does it use a context manager (with statement). This can lead to resource leaks, file handle exhaustion, and locked database files under high concurrency.",
+        "severity": "MEDIUM",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 9,
+          "end_line": 10,
+          "code_snippet": "conn = sqlite3.connect(\"users.db\")\n    cursor = conn.cursor()"
+        },
+        "remediation": {
+          "explanation": "Using context managers guarantees that database connections and cursors are properly and safely cleaned up and closed, even if exceptions occur during execution.",
+          "recommended_fix": "with sqlite3.connect(\"users.db\") as conn:\n        cursor = conn.cursor()\n        cursor.execute(query, (username, password))\n        user = cursor.fetchone()",
+          "references": [
+            "Python PEP 343 - The \"with\" Statement",
+            "Clean Code by Robert C. Martin - Resource Management"
+          ]
+        },
+        "raw_risk_score": 5.5,
+        "is_advisory_only": true
+      },
+      "risk_score": 5.5,
+      "priority_rank": 7,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-003",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Resource Management",
+        "cwe_id": "CWE-400",
+        "owasp_category": "A04:2021 - Insecure Design",
+        "title": "Unbuffered Large Result Set Memory Exhaustion Pattern",
+        "description": "Calling fetchall() directly on a database session without pagination or cursor streaming loads the entire database table into application memory at once. For large datasets, this creates a significant memory leak and resource exhaustion risk.",
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\admin.py",
+          "start_line": 24,
+          "end_line": 26,
+          "code_snippet": "        elif action == \"export_data\":\n            # Unbuffered memory leak pattern\n            all_records = db_session.fetchall()\n            return all_records"
+        },
+        "remediation": {
+          "explanation": "Stream or paginate database queries to prevent excessive memory consumption when dealing with large volumes of data exports.",
+          "recommended_fix": "Implement cursor-based iteration, server-side pagination, or generator-based streaming to yield records incrementally rather than loading all records into memory simultaneously.",
+          "references": [
+            "CWE-400: Uncontrolled Resource Consumption",
+            "OWASP Architectural Principles - Resource Management"
+          ]
+        },
+        "raw_risk_score": 4.2,
+        "is_advisory_only": true
+      },
+      "risk_score": 4.2,
+      "priority_rank": 8,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    },
+    {
+      "finding": {
+        "id": "ARCH-002",
+        "agent_role": "SOFTWARE_ARCHITECT",
+        "category": "Single Responsibility Principle (SRP) & Coupling",
+        "cwe_id": null,
+        "owasp_category": "A04:2021 – Insecure Design",
+        "title": "Mixed Responsibilities in Authentication Function",
+        "description": "The login_user function tightly couples database access logic (establishing a direct SQLite connection and executing queries) with token generation (JWT encoding) and HTTP-like response formatting. This violates the Single Responsibility Principle and increases coupling, making unit testing difficult without a mock database.",
+        "severity": "LOW",
+        "confidence": "HIGH",
+        "evidence": {
+          "file_path": "C:\\Users\\EAGLE ENGINEERS\\Downloads\\final year project testing\\samples\\vulnerable_app\\auth.py",
+          "start_line": 8,
+          "end_line": 20,
+          "code_snippet": "def login_user(username, password):\n    conn = sqlite3.connect(\"users.db\")\n    cursor = conn.cursor()\n\n    # DEMO VULNERABILITY: Raw SQL Injection (CWE-89)\n    query = f\"SELECT * FROM accounts WHERE username = '{username}' AND password = '{password}'\"\n    cursor.execute(query)\n    user = cursor.fetchone()\n\n    if user:\n        token = jwt.encode({\"user_id\": user[0]}, JWT_SECRET_KEY, algorithm=\"HS256\")\n        return {\"status\": \"success\", \"token\": token}\n    return {\"status\": \"failed\", \"error\": \"Invalid credentials\"}"
+        },
+        "remediation": {
+          "explanation": "Separating data access logic into a repository or data-access layer and keeping business logic decoupled from persistence improves modularity, testability, and maintainability.",
+          "recommended_fix": "Delegate database operations to a dedicated user repository function and keep the authentication handler focused strictly on workflow orchestration.",
+          "references": [
+            "Single Responsibility Principle (SRP)",
+            "Repository Pattern"
+          ]
+        },
+        "raw_risk_score": 3.0,
+        "is_advisory_only": true
+      },
+      "risk_score": 3.0,
+      "priority_rank": 9,
+      "is_deduplicated": false,
+      "sources": [
+        "SOFTWARE_ARCHITECT"
+      ],
+      "arbitration_notes": null
+    }
+  ],
+  "severity_distribution": {
+    "CRITICAL": 2,
+    "HIGH": 4,
+    "MEDIUM": 2,
+    "LOW": 1,
+    "INFO": 0
+  },
+  "risk_summary": {
+    "total_findings": 9,
+    "average_risk_score": 6.98,
+    "max_risk_score": 10.0,
+    "critical_count": 2,
+    "high_count": 4,
+    "deduplicated_count": 2
+  },
+  "agent_metrics": {
+    "total_agent_calls": 8,
+    "successful_agent_calls": 8,
+    "failed_agent_calls": 0,
+    "total_execution_time_ms": 112427.44,
+    "total_tokens_used": 0,
+    "by_role": {
+      "SECURITY_AUDITOR": {
+        "calls": 4,
+        "success": 4,
+        "failed": 0,
+        "execution_time_ms": 50661.8371999939,
+        "findings_count": 4,
+        "tokens_used": 0
+      },
+      "SOFTWARE_ARCHITECT": {
+        "calls": 4,
+        "success": 4,
+        "failed": 0,
+        "execution_time_ms": 61765.604999964125,
+        "findings_count": 7,
+        "tokens_used": 0
+      }
+    }
+  },
+  "advisory_disclaimer": "This review report contains purely advisory recommendations for developer evaluation. No source code modifications have been applied automatically."
+}

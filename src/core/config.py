@@ -52,7 +52,7 @@ except ImportError:
 class Settings(BaseSettings):
     """Runtime configuration loaded from environment and defaults."""
 
-    app_name: str = "Automated Code Vulnerability Reviewer"
+    app_name: str = "LOKI - Automated Code Vulnerability Reviewer"
     app_env: str = "development"
     host: str = "127.0.0.1"
     port: int = 8000

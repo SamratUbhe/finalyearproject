@@ -119,6 +119,39 @@ def _add_scan_arguments(parser: argparse.ArgumentParser) -> None:
         default=False,
         help="Do not save scan report to review history",
     )
+    parser.add_argument(
+        "--export-html",
+        type=str,
+        default=None,
+        help="Export standalone HTML audit report to specified file path",
+    )
+    parser.add_argument(
+        "--export-pdf",
+        type=str,
+        default=None,
+        help="Export academic PDF audit report to specified file path",
+    )
+
+
+def _add_export_arguments(parser: argparse.ArgumentParser) -> None:
+    """Register report export options on parser."""
+    parser.add_argument(
+        "review_id",
+        type=str,
+        help="Review ID from review history to export",
+    )
+    parser.add_argument(
+        "--html",
+        type=str,
+        default=None,
+        help="File path to save standalone HTML report",
+    )
+    parser.add_argument(
+        "--pdf",
+        type=str,
+        default=None,
+        help="File path to save academic PDF audit report",
+    )
 
 
 def _add_history_arguments(parser: argparse.ArgumentParser) -> None:
@@ -146,8 +179,8 @@ def _add_history_arguments(parser: argparse.ArgumentParser) -> None:
 def build_parser() -> argparse.ArgumentParser:
     """Build command-line argument parser with subcommands."""
     parser = argparse.ArgumentParser(
-        prog="reviewer",
-        description="Automated Code Vulnerability Reviewer CLI",
+        prog="loki",
+        description="LOKI: Automated Code Vulnerability Reviewer CLI",
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
@@ -156,6 +189,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     history_parser = subparsers.add_parser("history", help="Query and view past review scan history")
     _add_history_arguments(history_parser)
+
+    export_parser = subparsers.add_parser("export", help="Export HTML or PDF audit reports for an existing scan")
+    _add_export_arguments(export_parser)
 
     return parser
 
@@ -169,7 +205,7 @@ def normalize_cli_args(argv: Optional[List[str]] = None) -> List[str]:
     if args[0] in ("-h", "--help", "-v", "--version"):
         return args
 
-    known_subcommands = {"scan", "history"}
+    known_subcommands = {"scan", "history", "export"}
     if args[0] not in known_subcommands:
         return ["scan"] + args
 
@@ -211,6 +247,22 @@ async def run_cli_scan(args: argparse.Namespace, console: Optional[Console] = No
                 out_path.parent.mkdir(parents=True, exist_ok=True)
                 out_path.write_text(json_text, encoding="utf-8")
 
+            if getattr(args, "export_html", None):
+                try:
+                    from src.reports.html_generator import HTMLReportGenerator
+                    html_path = Path(args.export_html).resolve()
+                    HTMLReportGenerator().save_to_file(review, html_path)
+                except Exception:
+                    pass
+
+            if getattr(args, "export_pdf", None):
+                try:
+                    from src.reports.pdf_generator import PDFReportGenerator
+                    pdf_path = Path(args.export_pdf).resolve()
+                    PDFReportGenerator().generate(review, output_path=pdf_path)
+                except Exception:
+                    pass
+
             if not getattr(args, "no_save", False):
                 try:
                     ReviewHistoryStorage().save_review(review)
@@ -224,7 +276,7 @@ async def run_cli_scan(args: argparse.Namespace, console: Optional[Console] = No
         console.print(
             Panel(
                 Text(
-                    f"Automated Code Vulnerability Reviewer\nTarget: {target}",
+                    f"⚡ LOKI: Automated Code Vulnerability Reviewer\nTarget: {target}",
                     justify="center",
                     style="bold white",
                 ),
@@ -290,6 +342,28 @@ async def run_cli_scan(args: argparse.Namespace, console: Optional[Console] = No
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.write_text(formatter.format_json_output(review), encoding="utf-8")
             console.print(f"\n[bold green]✓ Complete review report saved to: {out_path}[/bold green]")
+
+        # 4b. Export HTML report if requested
+        if getattr(args, "export_html", None):
+            try:
+                from src.reports.html_generator import HTMLReportGenerator
+                html_path = Path(args.export_html).resolve()
+                html_path.parent.mkdir(parents=True, exist_ok=True)
+                HTMLReportGenerator().save_to_file(review, html_path)
+                console.print(f"[bold green]✓ Standalone HTML report exported to:[/bold green] [bold cyan]{html_path}[/bold cyan]")
+            except Exception as exp_err:
+                console.print(f"[bold red]Failed to export HTML report: {exp_err}[/bold red]")
+
+        # 4c. Export PDF report if requested
+        if getattr(args, "export_pdf", None):
+            try:
+                from src.reports.pdf_generator import PDFReportGenerator
+                pdf_path = Path(args.export_pdf).resolve()
+                pdf_path.parent.mkdir(parents=True, exist_ok=True)
+                PDFReportGenerator().generate(review, output_path=pdf_path)
+                console.print(f"[bold green]✓ Academic PDF report exported to:[/bold green] [bold cyan]{pdf_path}[/bold cyan]")
+            except Exception as exp_err:
+                console.print(f"[bold red]Failed to export PDF report: {exp_err}[/bold red]")
 
         # 5. Save to review history unless disabled
         if not getattr(args, "no_save", False):
@@ -385,6 +459,49 @@ def run_cli_history(args: argparse.Namespace, console: Optional[Console] = None)
     return 0
 
 
+def run_cli_export(args: argparse.Namespace, console: Optional[Console] = None) -> int:
+    """Export standalone HTML or academic PDF reports for a historical review scan."""
+    console = console or Console()
+    storage = ReviewHistoryStorage()
+    review = storage.get_review(args.review_id)
+    if not review:
+        console.print(f"[bold red]Error: Review '{args.review_id}' not found in review history.[/bold red]")
+        return 1
+
+    exported = False
+    html_target = args.html
+    pdf_target = args.pdf
+
+    # If neither specified, default to exporting both into current working directory
+    if not html_target and not pdf_target:
+        html_target = f"review-{args.review_id}.html"
+        pdf_target = f"review-{args.review_id}.pdf"
+
+    if html_target:
+        try:
+            from src.reports.html_generator import HTMLReportGenerator
+            out_html = Path(html_target).resolve()
+            out_html.parent.mkdir(parents=True, exist_ok=True)
+            HTMLReportGenerator().save_to_file(review, out_html)
+            console.print(f"[bold green]✓ Standalone HTML report exported to:[/bold green] [bold cyan]{out_html}[/bold cyan]")
+            exported = True
+        except Exception as err:
+            console.print(f"[bold red]Failed to export HTML report: {err}[/bold red]")
+
+    if pdf_target:
+        try:
+            from src.reports.pdf_generator import PDFReportGenerator
+            out_pdf = Path(pdf_target).resolve()
+            out_pdf.parent.mkdir(parents=True, exist_ok=True)
+            PDFReportGenerator().generate(review, output_path=out_pdf)
+            console.print(f"[bold green]✓ Academic PDF report exported to:[/bold green] [bold cyan]{out_pdf}[/bold cyan]")
+            exported = True
+        except Exception as err:
+            console.print(f"[bold red]Failed to export PDF report: {err}[/bold red]")
+
+    return 0 if exported else 1
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     """CLI application entrypoint."""
     parser = build_parser()
@@ -393,6 +510,9 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if getattr(args, "command", None) == "history":
         return run_cli_history(args)
+
+    if getattr(args, "command", None) == "export":
+        return run_cli_export(args)
 
     # In sandboxed environments or under pytest, use execute_coroutine_sync to avoid socket IOCP hangs
     if "pytest" in sys.modules or os.environ.get("SANDBOX_MODE") == "1":

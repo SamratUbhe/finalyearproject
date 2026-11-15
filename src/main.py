@@ -45,6 +45,10 @@ dashboard_static_dir = Path(__file__).parent / "dashboard" / "static"
 if dashboard_static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(dashboard_static_dir)), name="static")
     app.mount("/dashboard/static", StaticFiles(directory=str(dashboard_static_dir)), name="dashboard_static")
+    assets_dir = dashboard_static_dir / "assets"
+    if assets_dir.exists():
+        app.mount("/assets/aistudio", StaticFiles(directory=str(assets_dir)), name="aistudio_assets")
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
 
 
 @app.get("/style.css", include_in_schema=False)

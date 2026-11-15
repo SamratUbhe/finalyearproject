@@ -15,13 +15,188 @@ const state = {
     category: 'all',
   },
   historyItems: [],
+  activeScanId: null,
+  scanAbortController: null,
+  stepTimer: null,
 };
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
   checkBackendHealth();
   loadHistory();
+  // Play Loki Opener intro immediately on load without delay
+  if (window.LokiOpener) {
+    window.LokiOpener.play({
+      imageSrc: '/assets/aistudio/IMG_20261107_230930_1a6db8c8.png',
+      fallbackSrc: '/static/assets/loki-logo.png',
+      durationMs: 3400,
+    });
+  }
+  // Initialize Glisse TabBar sliding highlight & hold-and-drag capability on the pill
+  initGlissePillDraggable();
+  setTimeout(() => {
+    updateGlisseTabBar(state.currentTab || 'new-review');
+  }, 60);
 });
+
+window.addEventListener('resize', () => {
+  updateGlisseTabBar(state.currentTab || 'new-review');
+});
+
+// Glisse TabBar Hold & Drag Pill Engine (glisse.kelvinzhang.ca <TabBar />)
+function initGlissePillDraggable() {
+  const inner = document.getElementById('glisse-tabbar-inner');
+  const indicator = document.getElementById('glisse-tab-indicator');
+  if (!inner || !indicator) return;
+
+  const tabIds = ['new-review', 'findings', 'history', 'assistance'];
+  const getButtons = () =>
+    tabIds
+      .map((t) => document.getElementById('tab-nav-' + (t === 'new-review' ? 'new' : t)))
+      .filter(Boolean);
+
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+  let candidateTabId = null;
+
+  function getClosestTab(clientX) {
+    const buttons = getButtons();
+    if (!buttons.length) return null;
+
+    let closest = null;
+    let minDistance = Infinity;
+
+    for (let i = 0; i < buttons.length; i++) {
+      const btn = buttons[i];
+      const rect = btn.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const dist = Math.abs(clientX - centerX);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closest = tabIds[i];
+      }
+    }
+    return closest;
+  }
+
+  function onPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    isDragging = false;
+    candidateTabId = state.currentTab || 'new-review';
+
+    window.addEventListener('pointermove', onPointerMove, { passive: false });
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  }
+
+  function onPointerMove(e) {
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (!isDragging) {
+      if (Math.abs(dx) > 4 && Math.abs(dx) > Math.abs(dy)) {
+        isDragging = true;
+        indicator.classList.add('is-dragging');
+      } else {
+        return;
+      }
+    }
+
+    if (e.cancelable) e.preventDefault();
+
+    const innerRect = inner.getBoundingClientRect();
+    const candidate = getClosestTab(e.clientX);
+    if (candidate) {
+      candidateTabId = candidate;
+    }
+
+    // Determine target button dimensions for current candidate
+    const btnId = 'tab-nav-' + (candidateTabId === 'new-review' ? 'new' : candidateTabId);
+    const targetBtn = document.getElementById(btnId);
+    const pillWidth = targetBtn ? targetBtn.offsetWidth : 80;
+    const pillHeight = targetBtn ? targetBtn.offsetHeight : 44;
+    const pillTop = targetBtn ? (targetBtn.getBoundingClientRect().top - innerRect.top) : 0;
+
+    // Follow cursor clamped to container
+    const rawLeft = e.clientX - innerRect.left - (pillWidth / 2);
+    const maxLeft = innerRect.width - pillWidth;
+    const clampedLeft = Math.max(0, Math.min(rawLeft, maxLeft));
+
+    indicator.style.transform = `translate3d(${clampedLeft}px, ${pillTop}px, 0)`;
+    indicator.style.width = `${pillWidth}px`;
+    indicator.style.height = `${pillHeight}px`;
+
+    // Preview active highlight on buttons during drag
+    tabIds.forEach((t) => {
+      const b = document.getElementById('tab-nav-' + (t === 'new-review' ? 'new' : t));
+      if (b) {
+        b.classList.toggle('active', t === candidateTabId);
+      }
+    });
+  }
+
+  function onPointerUp() {
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
+
+    if (isDragging) {
+      isDragging = false;
+      indicator.classList.remove('is-dragging');
+
+      // Prevent triggering click on whichever button the cursor released over
+      const preventClick = (evt) => {
+        evt.stopImmediatePropagation();
+        evt.preventDefault();
+      };
+      window.addEventListener('click', preventClick, { capture: true, once: true });
+      setTimeout(() => {
+        window.removeEventListener('click', preventClick, { capture: true });
+      }, 60);
+
+      // Snap and switch to the candidate tab
+      if (candidateTabId) {
+        switchTab(candidateTabId);
+      } else {
+        updateGlisseTabBar(state.currentTab);
+      }
+    }
+  }
+
+  inner.addEventListener('pointerdown', onPointerDown);
+}
+
+// Glisse Dynamic TabBar Sliding Highlight Engine (glisse.kelvinzhang.ca <TabBar />)
+function updateGlisseTabBar(tabId) {
+  const indicator = document.getElementById('glisse-tab-indicator');
+  const inner = document.querySelector('.glisse-tabbar-inner');
+  if (!indicator || !inner) return;
+
+  const btnId = 'tab-nav-' + (tabId === 'new-review' ? 'new' : tabId);
+  const activeBtn = document.getElementById(btnId);
+  if (!activeBtn) return;
+
+  const innerRect = inner.getBoundingClientRect();
+  const btnRect = activeBtn.getBoundingClientRect();
+
+  if (btnRect.width === 0 && btnRect.height === 0) {
+    setTimeout(() => updateGlisseTabBar(tabId), 60);
+    return;
+  }
+
+  const left = btnRect.left - innerRect.left;
+  const top = btnRect.top - innerRect.top;
+  const width = btnRect.width;
+  const height = btnRect.height;
+
+  indicator.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+  indicator.style.width = `${width}px`;
+  indicator.style.height = `${height}px`;
+  indicator.style.opacity = '1';
+}
 
 // Check API Health Status
 async function checkBackendHealth() {
@@ -48,22 +223,35 @@ async function checkBackendHealth() {
 // Navigation Tab Switcher
 function switchTab(tabId) {
   state.currentTab = tabId;
-  const tabs = ['new-review', 'findings', 'history'];
+  const tabs = ['new-review', 'findings', 'history', 'assistance'];
   tabs.forEach((t) => {
     const view = document.getElementById(`view-${t}`);
     const navBtn = document.getElementById(`tab-nav-${t === 'new-review' ? 'new' : t}`);
-    if (t === tabId) {
-      view.classList.add('active');
-      navBtn.classList.add('active');
-    } else {
-      view.classList.remove('active');
-      navBtn.classList.remove('active');
+    const sideBtn = document.getElementById(`side-nav-${t === 'new-review' ? 'new' : t}`);
+    const isActive = (t === tabId);
+    if (view) view.classList.toggle('active', isActive);
+    if (navBtn) {
+      navBtn.classList.toggle('active', isActive);
+      navBtn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     }
+    if (sideBtn) sideBtn.classList.toggle('active', isActive);
   });
+
+  const titleEl = document.getElementById('console-view-title');
+  if (titleEl) {
+    if (tabId === 'new-review') titleEl.innerHTML = '<span class="title-icon">🎯</span> Dashboard / New Review';
+    if (tabId === 'findings') titleEl.innerHTML = '<span class="title-icon">🔍</span> Moderated Findings Explorer';
+    if (tabId === 'history') titleEl.innerHTML = '<span class="title-icon">📜</span> Review History &amp; Comparison';
+    if (tabId === 'assistance') titleEl.innerHTML = '<span class="title-icon">📚</span> Assistance &amp; Multi-Agent Architecture';
+  }
+
   hideError();
   if (tabId === 'history') {
     loadHistory();
   }
+
+  // Smoothly slide Glisse rounded pill highlight indicator
+  updateGlisseTabBar(tabId);
 }
 
 // Source Type Switcher (Local vs GitHub)
@@ -185,12 +373,25 @@ async function startReview() {
 
   // Set UI to loading state
   const btn = document.getElementById('btn-start-review');
+  const btnCancel = document.getElementById('btn-cancel-review');
   const spinner = document.getElementById('btn-start-review-spinner');
   const btnText = document.getElementById('btn-start-review-text');
+
+  state.activeScanId = 'scan-' + Date.now();
+  state.scanAbortController = new AbortController();
 
   btn.disabled = true;
   spinner.style.display = 'inline-block';
   btnText.textContent = 'Analyzing Repository...';
+
+  const bannerStatusEl = document.getElementById('banner-status-amount');
+  if (bannerStatusEl) bannerStatusEl.textContent = 'Scanning AST...';
+
+  if (btnCancel) {
+    btnCancel.style.display = 'inline-flex';
+    btnCancel.disabled = false;
+    btnCancel.innerHTML = '<span>🛑</span> Cancel Review';
+  }
 
   // Animate stages
   updatePipelineStep('ingestion', 'active');
@@ -207,7 +408,8 @@ async function startReview() {
   }
 
   const startTime = Date.now();
-  const stepTimer = setInterval(() => {
+  if (state.stepTimer) clearInterval(state.stepTimer);
+  state.stepTimer = setInterval(() => {
     const elapsed = (Date.now() - startTime) / 1000;
     if (elapsed > 1.0) updatePipelineStep('ingestion', 'completed');
     if (elapsed > 1.2 && elapsed < 2.5) updatePipelineStep('context', 'active');
@@ -223,6 +425,7 @@ async function startReview() {
 
   try {
     const payload = {
+      scan_id: state.activeScanId,
       source_type: state.sourceType,
       path_or_url: targetPath,
       ref: ref,
@@ -233,9 +436,13 @@ async function startReview() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      signal: state.scanAbortController.signal,
     });
 
-    clearInterval(stepTimer);
+    if (state.stepTimer) {
+      clearInterval(state.stepTimer);
+      state.stepTimer = null;
+    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({ detail: 'Scan request failed.' }));
@@ -281,15 +488,86 @@ async function startReview() {
     }, 600);
 
   } catch (err) {
-    clearInterval(stepTimer);
-    showError(err.message || 'An unexpected error occurred during scan execution.');
+    if (state.stepTimer) {
+      clearInterval(state.stepTimer);
+      state.stepTimer = null;
+    }
+    const errBannerStatus = document.getElementById('banner-status-amount');
+    if (err.name === 'AbortError') {
+      showError('Review scan was cancelled by user.');
+      if (errBannerStatus) errBannerStatus.textContent = 'Scan Cancelled';
+    } else {
+      showError(err.message || 'An unexpected error occurred during scan execution.');
+      if (errBannerStatus) errBannerStatus.textContent = 'Review Failed';
+    }
     updateAgentCard('sec', 'IDLE', 0, 0);
     updateAgentCard('arch', 'IDLE', 0, 0);
+    if (modStatus) {
+      modStatus.className = 'agent-status-pill agent-status-idle';
+      modStatus.textContent = 'IDLE';
+    }
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
     btnText.textContent = 'Launch Vulnerability Review';
+    if (btnCancel) {
+      btnCancel.style.display = 'none';
+      btnCancel.disabled = false;
+      btnCancel.innerHTML = '<span>🛑</span> Cancel Review';
+    }
+    state.activeScanId = null;
+    state.scanAbortController = null;
   }
+}
+
+// Cancel In-Progress Review Execution
+async function cancelReview() {
+  const btnCancel = document.getElementById('btn-cancel-review');
+  if (btnCancel) {
+    btnCancel.disabled = true;
+    btnCancel.innerHTML = '<span>⏳</span> Cancelling...';
+  }
+
+  const scanIdToCancel = state.activeScanId;
+
+  // 1. Immediately abort the client fetch
+  if (state.scanAbortController) {
+    state.scanAbortController.abort();
+  }
+
+  if (state.stepTimer) {
+    clearInterval(state.stepTimer);
+    state.stepTimer = null;
+  }
+
+  // 2. Notify backend server to cancel the async analysis tasks
+  try {
+    await fetch('/api/v1/dashboard/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scan_id: scanIdToCancel }),
+    });
+  } catch (err) {
+    console.debug('Dashboard cancel notification error:', err);
+  }
+
+  // 3. Reset telemetry indicators
+  updatePipelineStep('ingestion', '');
+  updatePipelineStep('context', '');
+  updatePipelineStep('analysis', '');
+  updatePipelineStep('moderation', '');
+
+  updateAgentCard('sec', 'IDLE', 0, 0);
+  updateAgentCard('arch', 'IDLE', 0, 0);
+  const modStatus = document.getElementById('agent-mod-status');
+  if (modStatus) {
+    modStatus.className = 'agent-status-pill agent-status-idle';
+    modStatus.textContent = 'IDLE';
+  }
+
+  showError('Review scan has been cancelled.');
+  const cancelStatus = document.getElementById('banner-status-amount');
+  if (cancelStatus) cancelStatus.textContent = 'Scan Cancelled';
 }
 
 // Update Summary Statistics Counters
@@ -310,15 +588,52 @@ function updateSummaryStats(review) {
     if (risk > maxRisk) maxRisk = risk;
   });
 
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-critical').textContent = crit;
-  document.getElementById('stat-high').textContent = high;
-  document.getElementById('stat-medium').textContent = med;
-  document.getElementById('stat-low').textContent = low;
-  document.getElementById('stat-max-risk').textContent = maxRisk.toFixed(2);
+  const totalEl = document.getElementById('stat-total');
+  if (totalEl) totalEl.textContent = total;
+
+  const critEl = document.getElementById('stat-critical');
+  if (critEl) critEl.textContent = crit;
+
+  const highEl = document.getElementById('stat-high');
+  if (highEl) highEl.textContent = high;
+
+  const medEl = document.getElementById('stat-medium');
+  if (medEl) medEl.textContent = med;
+
+  const lowEl = document.getElementById('stat-low');
+  if (lowEl) lowEl.textContent = low;
+
+  const maxRiskEl = document.getElementById('stat-max-risk');
+  if (maxRiskEl) maxRiskEl.textContent = maxRisk.toFixed(2);
+
+  const critHighEl = document.getElementById('stat-critical-high');
+  if (critHighEl) critHighEl.textContent = crit + high;
+
+  const critSubEl = document.getElementById('stat-crit-sub');
+  if (critSubEl) critSubEl.textContent = `Critical: ${crit} • High: ${high}`;
 
   const badge = document.getElementById('tab-findings-count');
   if (badge) badge.textContent = total;
+
+  const sideBadge = document.getElementById('side-findings-count');
+  if (sideBadge) sideBadge.textContent = total;
+
+  const bellEl = document.getElementById('top-bell-count');
+  if (bellEl) bellEl.textContent = total;
+
+  // Reveal the 4 metric cards & graph visualizations upon scan completion
+  const metricsRow = document.getElementById('console-metrics-row');
+  if (metricsRow) {
+    metricsRow.style.display = 'grid';
+    metricsRow.classList.remove('metrics-revealed');
+    void metricsRow.offsetWidth; // Force reflow to re-trigger smooth slide-down animation
+    metricsRow.classList.add('metrics-revealed');
+  }
+
+  const bannerStatus = document.getElementById('banner-status-amount');
+  if (bannerStatus) {
+    bannerStatus.textContent = total > 0 ? `${total} Issue${total === 1 ? '' : 's'} Audited` : 'Repository Clean';
+  }
 }
 
 // Filter Finding Handlers
@@ -525,12 +840,18 @@ async function loadHistory() {
           <td><span style="color: ${critCount > 0 ? 'var(--sev-critical-text)' : 'var(--text-muted)'}; font-weight: 700;">${critCount}</span></td>
           <td><code>${item.max_risk_score.toFixed(2)}</code></td>
           <td>
-            <div style="display: flex; gap: 0.4rem;">
-              <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="inspectReview('${item.review_id}')">
+            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+              <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="inspectReview('${item.review_id}')" title="Inspect findings in explorer">
                 Inspect
               </button>
-              <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="selectForCompare('${item.review_id}')">
+              <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="selectForCompare('${item.review_id}')" title="Select for comparison">
                 Compare
+              </button>
+              <button class="btn-table-action" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="downloadReport('${item.review_id}', 'html')" title="Download standalone HTML Report">
+                📄 HTML
+              </button>
+              <button class="btn-table-action" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="downloadReport('${item.review_id}', 'pdf')" title="Download academic PDF Report">
+                📑 PDF
               </button>
             </div>
           </td>
@@ -711,3 +1032,28 @@ function renderCompareResults(diff) {
 
   listDiv.innerHTML = listHtml;
 }
+
+// -------------------------------------------------------------
+// Report Export Actions (REQ-10)
+// -------------------------------------------------------------
+
+// Export report for currently active review
+function exportCurrentReport(format) {
+  if (!state.currentReview || !state.currentReview.review_id) {
+    showError("Please run a review or select a scan from History before exporting a report.");
+    return;
+  }
+  downloadReport(state.currentReview.review_id, format);
+}
+
+// Download report directly by review ID and format (HTML or PDF)
+function downloadReport(reviewId, format) {
+  if (!reviewId) return;
+  const targetFormat = (format || 'html').toLowerCase();
+  const url = `/api/v1/reports/${targetFormat}/${encodeURIComponent(reviewId)}?download=true`;
+  const win = window.open(url, '_blank');
+  if (!win) {
+    window.location.href = url;
+  }
+}
+
